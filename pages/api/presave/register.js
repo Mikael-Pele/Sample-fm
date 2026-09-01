@@ -24,7 +24,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Please provide a valid email address." });
     }
 
-    const smartlink = await prisma.smartlink.findFirst({
+    const smartlink = await prisma.smartLink.findFirst({
       where: link_id ? { id: link_id } : { slug },
     });
 

@@ -16,7 +16,7 @@ export default function SlugPage({ smartlink, isAfricanFan, fanCountry, ownerIsP
 export async function getServerSideProps({ params, req, query }) {
   const { slug } = params;
 
-  const smartlink = await prisma.smartlink.findUnique({
+  const smartlink = await prisma.smartLink.findUnique({
     where: { slug },
     include: {
       user: {

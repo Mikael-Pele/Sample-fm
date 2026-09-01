@@ -20,7 +20,7 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: "You must be signed in." });
     }
 
-    const userLinks = await prisma.smartlink.findMany({
+    const userLinks = await prisma.smartLink.findMany({
       where: { user_id: session.userId },
       select: { id: true },
     });

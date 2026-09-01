@@ -121,7 +121,7 @@ export default async function handler(req, res) {
 
     const slug = generateSlug(7);
 
-    const smartlink = await prisma.smartlink.create({
+    const smartlink = await prisma.smartLink.create({
       data: {
         slug,
         user_id: user.id,

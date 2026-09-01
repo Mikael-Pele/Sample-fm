@@ -30,7 +30,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Unrecognized platform_clicked value." });
     }
 
-    const smartlink = await prisma.smartlink.findFirst({
+    const smartlink = await prisma.smartLink.findFirst({
       where: link_id ? { id: link_id } : { slug },
     });
 
