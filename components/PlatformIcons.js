@@ -1,41 +1,58 @@
 // Lightweight, dependency-free inline SVG logo marks for each supported
 // platform. Kept intentionally small/flat to preserve the sub-200KB page
 // weight budget for fans on constrained mobile data plans. Every icon
-// renders inside a 24x24 flex bounding box and carries the platform's
-// exact official brand color for instant recognition/trust.
+// accepts a `size` prop (defaults to 24px) so callers can render them
+// large and prominent — e.g. the Dashboard's platform rows use size=44 —
+// without any layout/specificity fights with wrapper classes.
 
-export function AudiomackIcon({ className }) {
+export function AudiomackIcon({ className, size = 24 }) {
+  // Reproduces Audiomack's actual mark: an orange soundwave squiggle on a
+  // black rounded field (their real logo is not a circle+play-triangle).
   return (
-    <div className={`w-6 h-6 flex items-center justify-center shrink-0 ${className || ""}`}>
-      <svg viewBox="0 0 24 24" width="24" height="24" fill="none">
-        <circle cx="12" cy="12" r="11" fill="#FF8200" />
+    <div
+      className={`flex items-center justify-center shrink-0 ${className || ""}`}
+      style={{ width: size, height: size }}
+    >
+      <svg viewBox="0 0 24 24" width={size} height={size} fill="none">
+        <rect x="0.5" y="0.5" width="23" height="23" rx="6" fill="#000000" />
         <path
-          d="M7 15.5V8.5l3.2 3.4L13.4 8.5v7M17 8.5v7"
-          stroke="#0A0A0C"
-          strokeWidth="1.6"
+          d="M3.5 13.5L6.8 7l3 10 3.2-13.5 3 13 3-9.5 1.5 6"
+          stroke="#FF8200"
+          strokeWidth="1.8"
           strokeLinecap="round"
           strokeLinejoin="round"
+          fill="none"
         />
       </svg>
     </div>
   );
 }
 
-export function BoomplayIcon({ className }) {
+export function BoomplayIcon({ className, size = 24 }) {
+  // Reproduces Boomplay's actual mark: a cyan ribbon-style "B" on a black
+  // circle (their real brand color is cyan/turquoise, not yellow).
   return (
-    <div className={`w-6 h-6 flex items-center justify-center shrink-0 ${className || ""}`}>
-      <svg viewBox="0 0 24 24" width="24" height="24" fill="none">
-        <circle cx="12" cy="12" r="11" fill="#FFC107" />
-        <path d="M9.5 7.5L16 12l-6.5 4.5v-9z" fill="#0A0A0C" />
+    <div
+      className={`flex items-center justify-center shrink-0 ${className || ""}`}
+      style={{ width: size, height: size }}
+    >
+      <svg viewBox="0 0 24 24" width={size} height={size} fill="none">
+        <circle cx="12" cy="12" r="11.5" fill="#000000" />
+        <rect x="7" y="5.5" width="2.1" height="13" rx="1" fill="#00E5D4" />
+        <path d="M8.2 5.5L16 8.6L8.2 11.8V5.5z" fill="#00E5D4" />
+        <path d="M8.2 12.2L16 15.3L8.2 18.5V12.2z" fill="#00E5D4" />
       </svg>
     </div>
   );
 }
 
-export function SpotifyIcon({ className }) {
+export function SpotifyIcon({ className, size = 24 }) {
   return (
-    <div className={`w-6 h-6 flex items-center justify-center shrink-0 ${className || ""}`}>
-      <svg viewBox="0 0 24 24" width="24" height="24" fill="none">
+    <div
+      className={`flex items-center justify-center shrink-0 ${className || ""}`}
+      style={{ width: size, height: size }}
+    >
+      <svg viewBox="0 0 24 24" width={size} height={size} fill="none">
         <circle cx="12" cy="12" r="11" fill="#1DB954" />
         <path
           d="M6.5 9.8c3.3-1 7.7-.6 10.4 1.1M7 13c2.8-.8 6.3-.5 8.6.9M7.4 16c2.3-.6 5-.4 6.9.8"
@@ -48,10 +65,13 @@ export function SpotifyIcon({ className }) {
   );
 }
 
-export function AppleMusicIcon({ className }) {
+export function AppleMusicIcon({ className, size = 24 }) {
   return (
-    <div className={`w-6 h-6 flex items-center justify-center shrink-0 ${className || ""}`}>
-      <svg viewBox="0 0 24 24" width="24" height="24" fill="none">
+    <div
+      className={`flex items-center justify-center shrink-0 ${className || ""}`}
+      style={{ width: size, height: size }}
+    >
+      <svg viewBox="0 0 24 24" width={size} height={size} fill="none">
         <rect x="1" y="1" width="22" height="22" rx="6" fill="#FA243C" />
         <path
           d="M15.8 6.2v7.4a2.3 2.3 0 11-1.4-2.1V8.6l-4.8 1.1v6a2.3 2.3 0 11-1.4-2.1V7.6l7.6-1.4z"
@@ -62,10 +82,13 @@ export function AppleMusicIcon({ className }) {
   );
 }
 
-export function YouTubeMusicIcon({ className }) {
+export function YouTubeMusicIcon({ className, size = 24 }) {
   return (
-    <div className={`w-6 h-6 flex items-center justify-center shrink-0 ${className || ""}`}>
-      <svg viewBox="0 0 24 24" width="24" height="24" fill="none">
+    <div
+      className={`flex items-center justify-center shrink-0 ${className || ""}`}
+      style={{ width: size, height: size }}
+    >
+      <svg viewBox="0 0 24 24" width={size} height={size} fill="none">
         <circle cx="12" cy="12" r="11" fill="#FF0000" />
         <circle cx="12" cy="12" r="6.2" fill="#fff" />
         <circle cx="12" cy="12" r="1.9" fill="#FF0000" />
@@ -75,11 +98,14 @@ export function YouTubeMusicIcon({ className }) {
   );
 }
 
-export function SampleFmMark({ className }) {
+export function SampleFmMark({ className, size = 16 }) {
   return (
-    <div className={`w-4 h-4 flex items-center justify-center shrink-0 ${className || ""}`}>
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="none">
-        <rect x="1" y="1" width="22" height="22" rx="6" fill="#D4AF37" />
+    <div
+      className={`flex items-center justify-center shrink-0 ${className || ""}`}
+      style={{ width: size, height: size }}
+    >
+      <svg viewBox="0 0 24 24" width={size} height={size} fill="none">
+        <rect x="1" y="1" width="22" height="22" rx="6" fill="#FF4D00" />
         <path
           d="M7 16V8l5 4 5-4v8"
           stroke="#0A0A0C"

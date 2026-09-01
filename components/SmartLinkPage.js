@@ -104,6 +104,7 @@ export default function SmartLinkPage({ smartlink, isAfricanFan, fanCountry, own
         Icon: AudiomackIcon,
         accentBorder: "hover:border-audiomack",
         buttonBg: "bg-audiomack",
+        glow: "rgba(255, 130, 0, 0.45)",
       },
       {
         key: "boomplay",
@@ -112,6 +113,7 @@ export default function SmartLinkPage({ smartlink, isAfricanFan, fanCountry, own
         Icon: BoomplayIcon,
         accentBorder: "hover:border-boomplay",
         buttonBg: "bg-boomplay",
+        glow: "rgba(0, 229, 212, 0.45)",
       },
       {
         key: "spotify",
@@ -120,6 +122,7 @@ export default function SmartLinkPage({ smartlink, isAfricanFan, fanCountry, own
         Icon: SpotifyIcon,
         accentBorder: "hover:border-spotify",
         buttonBg: "bg-spotify",
+        glow: "rgba(29, 185, 84, 0.45)",
       },
       {
         key: "apple",
@@ -128,6 +131,7 @@ export default function SmartLinkPage({ smartlink, isAfricanFan, fanCountry, own
         Icon: AppleMusicIcon,
         accentBorder: "hover:border-apple",
         buttonBg: "bg-apple",
+        glow: "rgba(250, 36, 60, 0.45)",
       },
       {
         key: "youtube",
@@ -136,6 +140,7 @@ export default function SmartLinkPage({ smartlink, isAfricanFan, fanCountry, own
         Icon: YouTubeMusicIcon,
         accentBorder: "hover:border-youtube",
         buttonBg: "bg-youtube",
+        glow: "rgba(255, 0, 0, 0.45)",
       },
     ].filter((p) => Boolean(p.url));
 
@@ -227,9 +232,12 @@ export default function SmartLinkPage({ smartlink, isAfricanFan, fanCountry, own
   }
 
   const pageTitle = `${smartlink.track_title} — ${smartlink.artist_name} | Sample.fm`;
+  // Stronger, more saturated artwork-driven tint — this is the page's main
+  // source of "excitement": the mood shifts with the cover art itself,
+  // the way Spotify/Apple's adaptive players do, rather than a flat block.
   const bgStyle = avgColor
     ? {
-        backgroundImage: `radial-gradient(circle at 50% 0%, rgba(${avgColor}, 0.35), transparent 60%), radial-gradient(circle at 50% 100%, rgba(${avgColor}, 0.18), transparent 70%)`,
+        backgroundImage: `radial-gradient(circle at 50% 0%, rgba(${avgColor}, 0.55), transparent 62%), radial-gradient(circle at 50% 100%, rgba(${avgColor}, 0.32), transparent 75%)`,
         transition: "background-image 700ms ease",
       }
     : undefined;
@@ -297,7 +305,8 @@ export default function SmartLinkPage({ smartlink, isAfricanFan, fanCountry, own
               key={platform.key}
               type="button"
               onClick={() => handlePlatformClick(platform)}
-              className={`w-full flex items-center gap-3 bg-base-bg border border-base-border rounded-xl px-3.5 sm:px-4 py-3 transition ${platform.accentBorder}`}
+              style={{ "--glow-color": platform.glow }}
+              className={`glow-on-hover w-full flex items-center gap-3 bg-base-bg border border-base-border rounded-xl px-3.5 sm:px-4 py-3 ${platform.accentBorder}`}
             >
               <platform.Icon />
               <span className="flex-1 min-w-0 text-left text-sm font-semibold text-white truncate">

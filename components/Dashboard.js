@@ -39,11 +39,15 @@ const PLATFORM_FIELDS = [
 function PlatformInput({ field, value, onChange }) {
   const { key, label, Icon, ring } = field;
   return (
-    <div
-      className={`flex items-center gap-3 bg-base-bg border border-base-border rounded-lg px-3 py-2 transition focus-within:border-brand focus-within:ring-1 ${ring}`}
-    >
-      <Icon />
-      <div className="min-w-0 flex-1">
+    <div className="flex items-center gap-3">
+      {/* Logo lives in its own large, separate tile — not squeezed inside
+          the input field. */}
+      <div className="w-14 h-14 rounded-xl bg-base-bg border border-base-border flex items-center justify-center shrink-0">
+        <Icon size={40} />
+      </div>
+      <div
+        className={`min-w-0 flex-1 bg-base-bg border border-base-border rounded-lg px-3.5 py-2.5 transition focus-within:border-brand focus-within:ring-1 ${ring}`}
+      >
         <label htmlFor={key} className="block text-[11px] font-semibold text-base-muted mb-0.5">
           {label}
         </label>
@@ -347,7 +351,8 @@ export default function Dashboard({ initialUser }) {
                   href={PAYSTACK_PLAN_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="bg-brand hover:bg-brand-dark transition text-base-bg font-bold rounded-lg px-6 py-3 text-sm text-center"
+                  style={{ "--glow-color": "rgba(255, 77, 0, 0.5)" }}
+                  className="shimmer-gold glow-on-hover text-base-bg font-bold rounded-lg px-6 py-3 text-sm text-center"
                 >
                   Upgrade to Premium — $16/mo
                 </a>

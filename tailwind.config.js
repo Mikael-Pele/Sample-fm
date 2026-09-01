@@ -15,15 +15,20 @@ module.exports = {
           muted: "#71717A",
         },
         brand: {
-          DEFAULT: "#D4AF37",
-          light: "#E8C766",
-          dark: "#B8912A",
+          // Electric neon orange — the Sample.fm accent (upgraded from the
+          // earlier champagne gold per direct request). Kept distinct from
+          // Audiomack's orange (#FF8200) by pushing redder/more saturated.
+          DEFAULT: "#FF4D00",
+          light: "#FF8A5B",
+          dark: "#D93E00",
         },
         audiomack: {
           DEFAULT: "#FF8200",
         },
         boomplay: {
-          DEFAULT: "#FFC107",
+          // Boomplay's real brand mark is cyan/turquoise, not yellow —
+          // corrected to match their actual logo.
+          DEFAULT: "#00E5D4",
         },
         spotify: {
           DEFAULT: "#1DB954",

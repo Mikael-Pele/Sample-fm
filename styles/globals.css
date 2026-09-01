@@ -63,6 +63,45 @@ img {
   transition: background 0.6s ease;
 }
 
+/* Platform rows / CTAs: a soft colored glow that ignites on hover instead
+   of a flat static block — this is where "excitement" lives, kept
+   contained to interactive elements so the base UI stays quiet-luxury. */
+.glow-on-hover {
+  transition: box-shadow 220ms ease, transform 150ms ease, filter 220ms ease;
+}
+.glow-on-hover:hover {
+  transform: translateY(-1px) scale(1.015);
+  filter: brightness(1.06);
+  box-shadow: 0 0 22px 1px var(--glow-color, rgba(255, 77, 0, 0.35));
+}
+.glow-on-hover:active {
+  transform: translateY(0) scale(0.99);
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer-gold {
+  background: linear-gradient(110deg, #ff4d00 30%, #ffb37a 50%, #ff4d00 70%);
+  background-size: 220% 100%;
+  animation: shimmer 3.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shimmer-gold {
+    animation: none;
+  }
+  .glow-on-hover {
+    transition: none;
+  }
+}
+
 @keyframes fade-in {
   from {
     opacity: 0;
