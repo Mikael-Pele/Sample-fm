@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/router";
 import {
   AudiomackIcon,
@@ -76,47 +76,34 @@ function StatTile({ label, value }) {
   );
 }
 
-function averageColorFromImage(url) {
-  return new Promise((resolve) => {
-    try {
-      const img = new window.Image();
-      img.crossOrigin = "anonymous";
-      img.onload = () => {
-        try {
-          const canvas = document.createElement("canvas");
-          canvas.width = 8;
-          canvas.height = 8;
-          const ctx = canvas.getContext("2d");
-          ctx.drawImage(img, 0, 0, 8, 8);
-          const { data } = ctx.getImageData(0, 0, 8, 8);
-          let r = 0;
-          let g = 0;
-          let b = 0;
-          const count = data.length / 4;
-          for (let i = 0; i < data.length; i += 4) {
-            r += data[i];
-            g += data[i + 1];
-            b += data[i + 2];
-          }
-          resolve(`rgb(${Math.round(r / count)}, ${Math.round(g / count)}, ${Math.round(b / count)})`);
-        } catch (err) {
-          resolve(null);
-        }
-      };
-      img.onerror = () => resolve(null);
-      img.src = url;
-    } catch (err) {
-      resolve(null);
-    }
+const MAX_ARTWORK_BYTES = 6 * 1024 * 1024; // 6MB, matches the server-side cap
+const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
   });
+}
+
+let artworkItemSeq = 0;
+function nextArtworkItemId() {
+  artworkItemSeq += 1;
+  return `art-${Date.now()}-${artworkItemSeq}`;
 }
 
 export default function Dashboard({ initialUser }) {
   const router = useRouter();
   const [user, setUser] = useState(initialUser);
   const [form, setForm] = useState(EMPTY_FORM);
-  const [artworkUrls, setArtworkUrls] = useState([""]);
-  const [artworkPreviewColors, setArtworkPreviewColors] = useState({});
+  // Each item: { id, previewUrl (local, instant), url (final hosted URL
+  // once uploaded), uploading, error, source: "upload" | "url" }
+  const [artworkItems, setArtworkItems] = useState([]);
+  const [manualUrlOpen, setManualUrlOpen] = useState(false);
+  const [manualUrlValue, setManualUrlValue] = useState("");
+  const fileInputRef = useRef(null);
   const [links, setLinks] = useState([]);
   const [analytics, setAnalytics] = useState(null);
   const [creating, setCreating] = useState(false);
@@ -158,31 +145,84 @@ export default function Dashboard({ initialUser }) {
     }));
   }
 
-  function handleArtworkChange(index, value) {
-    setArtworkUrls((prev) => {
-      const next = [...prev];
-      next[index] = value;
-      return next;
-    });
-    if (value) {
-      averageColorFromImage(value).then((color) => {
-        if (color) {
-          setArtworkPreviewColors((prev) => ({ ...prev, [index]: color }));
-        }
+  function updateArtworkItem(id, patch) {
+    setArtworkItems((prev) => prev.map((item) => (item.id === id ? { ...item, ...patch } : item)));
+  }
+
+  async function uploadArtworkFile(file) {
+    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+      window.alert(`${file.name}: unsupported file type. Use JPG, PNG, WEBP, or GIF.`);
+      return;
+    }
+    if (file.size > MAX_ARTWORK_BYTES) {
+      window.alert(`${file.name}: file is too large. Max size is 6MB.`);
+      return;
+    }
+
+    const id = nextArtworkItemId();
+    const previewUrl = URL.createObjectURL(file);
+
+    setArtworkItems((prev) => [
+      ...prev,
+      { id, previewUrl, url: null, uploading: true, error: null, source: "upload" },
+    ]);
+
+    try {
+      const dataUrl = await readFileAsDataUrl(file);
+      const res = await fetch("/api/upload/artwork", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ data_url: dataUrl }),
       });
+      const data = await res.json();
+
+      if (!res.ok) {
+        updateArtworkItem(id, { uploading: false, error: data.error || "Upload failed." });
+        return;
+      }
+
+      updateArtworkItem(id, { uploading: false, url: data.url, error: null });
+    } catch (err) {
+      updateArtworkItem(id, { uploading: false, error: "Network error during upload." });
     }
   }
 
-  function addArtworkField() {
-    setArtworkUrls((prev) => [...prev, ""]);
+  function handleFilesSelected(fileList) {
+    const files = Array.from(fileList || []);
+    files.forEach((file) => uploadArtworkFile(file));
+    if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
-  function removeArtworkField(index) {
-    setArtworkUrls((prev) => prev.filter((_, i) => i !== index));
-    setArtworkPreviewColors((prev) => {
-      const next = { ...prev };
-      delete next[index];
-      return next;
+  function handleDrop(e) {
+    e.preventDefault();
+    handleFilesSelected(e.dataTransfer.files);
+  }
+
+  function addManualUrl() {
+    const trimmed = manualUrlValue.trim();
+    if (!trimmed) return;
+    setArtworkItems((prev) => [
+      ...prev,
+      {
+        id: nextArtworkItemId(),
+        previewUrl: trimmed,
+        url: trimmed,
+        uploading: false,
+        error: null,
+        source: "url",
+      },
+    ]);
+    setManualUrlValue("");
+    setManualUrlOpen(false);
+  }
+
+  function removeArtworkItem(id) {
+    setArtworkItems((prev) => {
+      const item = prev.find((i) => i.id === id);
+      if (item && item.source === "upload" && item.previewUrl) {
+        URL.revokeObjectURL(item.previewUrl);
+      }
+      return prev.filter((i) => i.id !== id);
     });
   }
 
@@ -191,9 +231,20 @@ export default function Dashboard({ initialUser }) {
     setCreateError("");
     setCreateSuccess("");
     setDroppedFieldsNotice([]);
-    setCreating(true);
 
-    const cleanGallery = artworkUrls.map((u) => u.trim()).filter(Boolean);
+    if (artworkItems.some((item) => item.uploading)) {
+      setCreateError("Please wait for cover art uploads to finish.");
+      return;
+    }
+
+    const cleanGallery = artworkItems.map((item) => item.url).filter(Boolean);
+
+    if (cleanGallery.length === 0) {
+      setCreateError("Please add at least one cover image.");
+      return;
+    }
+
+    setCreating(true);
 
     try {
       const res = await fetch("/api/links/create", {
@@ -218,8 +269,7 @@ export default function Dashboard({ initialUser }) {
         setDroppedFieldsNotice(data.dropped_fields);
       }
       setForm(EMPTY_FORM);
-      setArtworkUrls([""]);
-      setArtworkPreviewColors({});
+      setArtworkItems([]);
       loadLinks();
       loadAnalytics();
     } catch (err) {
@@ -297,7 +347,8 @@ export default function Dashboard({ initialUser }) {
   }
 
   return (
-    <div className="min-h-screen bg-base-bg text-white overflow-x-hidden">
+    <div className="relative min-h-screen bg-base-bg text-white overflow-x-hidden">
+      <div className="light-streaks" aria-hidden="true" />
       <header className="border-b border-base-border sticky top-0 bg-base-bg/95 backdrop-blur z-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 min-w-0">
@@ -328,7 +379,7 @@ export default function Dashboard({ initialUser }) {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10 space-y-8 sm:space-y-10">
+      <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10 space-y-8 sm:space-y-10">
         {/* ---------------- Billing Component ---------------- */}
         <section className="glass-card rounded-xl2 p-5 sm:p-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
@@ -557,57 +608,106 @@ export default function Dashboard({ initialUser }) {
               </div>
             </div>
 
-            {/* ---------------- Cover Art Gallery ---------------- */}
+            {/* ---------------- Cover Art Upload ---------------- */}
             <div>
               <label className="block text-xs font-semibold text-base-muted mb-1.5">
                 Cover Art (one or more images — the first is the banner)
               </label>
-              <div className="space-y-2">
-                {artworkUrls.map((url, index) => (
-                  <div key={index} className="flex items-center gap-2">
+
+              <div
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={handleDrop}
+                onClick={() => fileInputRef.current?.click()}
+                className="cursor-pointer flex flex-col items-center justify-center gap-2 border-2 border-dashed border-base-border hover:border-brand rounded-xl px-4 py-8 text-center transition"
+              >
+                <UploadIcon className="text-base-muted" />
+                <p className="text-sm font-semibold text-white">
+                  Drag &amp; drop images, or click to browse
+                </p>
+                <p className="text-xs text-base-muted">JPG, PNG, WEBP, or GIF — up to 6MB each</p>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  multiple
+                  onChange={(e) => handleFilesSelected(e.target.files)}
+                  className="hidden"
+                />
+              </div>
+
+              {artworkItems.length > 0 && (
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mt-3">
+                  {artworkItems.map((item, index) => (
                     <div
-                      className="w-11 h-11 rounded-md overflow-hidden bg-base-bg border border-base-border shrink-0 flex items-center justify-center"
-                      style={
-                        !url
-                          ? { backgroundColor: artworkPreviewColors[index] || undefined }
-                          : undefined
-                      }
+                      key={item.id}
+                      className="relative aspect-square rounded-lg overflow-hidden bg-base-bg border border-base-border"
                     >
-                      {url ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={url} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        <UploadIcon className="text-base-muted" />
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={item.previewUrl}
+                        alt=""
+                        className={`w-full h-full object-cover ${
+                          item.uploading ? "opacity-40" : ""
+                        }`}
+                      />
+                      {index === 0 && !item.uploading && !item.error && (
+                        <span className="absolute top-1 left-1 bg-brand text-base-bg text-[10px] font-bold px-1.5 py-0.5 rounded">
+                          BANNER
+                        </span>
                       )}
-                    </div>
-                    <input
-                      type="url"
-                      required={index === 0}
-                      value={url}
-                      onChange={(e) => handleArtworkChange(index, e.target.value)}
-                      placeholder="https://cdn.example.com/artwork.jpg"
-                      className="flex-1 min-w-0 bg-base-bg border border-base-border rounded-lg px-3.5 py-2.5 text-sm outline-none focus:border-brand transition"
-                    />
-                    {artworkUrls.length > 1 && (
+                      {item.uploading && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="text-[10px] font-semibold text-white bg-black/60 px-2 py-1 rounded">
+                            Uploading…
+                          </span>
+                        </div>
+                      )}
+                      {item.error && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-red-950/80 px-1">
+                          <span className="text-[10px] font-semibold text-red-300 text-center">
+                            {item.error}
+                          </span>
+                        </div>
+                      )}
                       <button
                         type="button"
-                        onClick={() => removeArtworkField(index)}
-                        className="text-base-muted hover:text-red-400 transition text-lg shrink-0 px-1"
+                        onClick={() => removeArtworkItem(item.id)}
                         aria-label="Remove image"
+                        className="absolute top-1 right-1 w-5 h-5 flex items-center justify-center rounded-full bg-black/70 text-white text-xs hover:bg-red-600 transition"
                       >
                         ✕
                       </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-              <button
-                type="button"
-                onClick={addArtworkField}
-                className="mt-2 text-xs font-semibold text-brand-light hover:text-brand transition"
-              >
-                + Add another cover image
-              </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {!manualUrlOpen ? (
+                <button
+                  type="button"
+                  onClick={() => setManualUrlOpen(true)}
+                  className="mt-2 text-xs font-semibold text-brand-light hover:text-brand transition"
+                >
+                  or paste an image URL instead
+                </button>
+              ) : (
+                <div className="mt-2 flex items-center gap-2">
+                  <input
+                    type="url"
+                    value={manualUrlValue}
+                    onChange={(e) => setManualUrlValue(e.target.value)}
+                    placeholder="https://cdn.example.com/artwork.jpg"
+                    className="flex-1 min-w-0 bg-base-bg border border-base-border rounded-lg px-3.5 py-2.5 text-sm outline-none focus:border-brand transition"
+                  />
+                  <button
+                    type="button"
+                    onClick={addManualUrl}
+                    className="bg-base-card border border-base-border hover:border-brand transition text-white font-semibold rounded-lg px-4 py-2.5 text-sm shrink-0"
+                  >
+                    Add
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="grid sm:grid-cols-2 gap-4 items-end">

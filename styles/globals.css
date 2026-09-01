@@ -102,6 +102,71 @@ img {
   }
 }
 
+/* Ambient background: two soft diagonal light streaks that slowly drift,
+   giving otherwise-flat dark screens some life without any images or
+   external assets. Pure CSS, purely decorative — sits behind content. */
+.light-streaks {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.light-streaks::before,
+.light-streaks::after {
+  content: "";
+  position: absolute;
+  top: -60%;
+  width: 55%;
+  height: 220%;
+  transform: rotate(18deg);
+  animation: streak-drift 16s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+.light-streaks::before {
+  left: -15%;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(255, 77, 0, 0.14) 45%,
+    rgba(255, 77, 0, 0.05) 55%,
+    transparent 100%
+  );
+}
+
+.light-streaks::after {
+  left: 58%;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(0, 229, 212, 0.1) 45%,
+    rgba(29, 185, 84, 0.08) 55%,
+    transparent 100%
+  );
+  animation-delay: -8s;
+}
+
+@keyframes streak-drift {
+  0%,
+  100% {
+    transform: translateX(0) rotate(18deg);
+    opacity: 0.55;
+  }
+  50% {
+    transform: translateX(8%) rotate(13deg);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .light-streaks::before,
+  .light-streaks::after {
+    animation: none;
+  }
+}
+
 @keyframes fade-in {
   from {
     opacity: 0;

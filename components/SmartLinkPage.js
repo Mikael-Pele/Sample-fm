@@ -244,9 +244,10 @@ export default function SmartLinkPage({ smartlink, isAfricanFan, fanCountry, own
 
   return (
     <div
-      className="min-h-[100dvh] bg-base-bg flex items-center justify-center px-4 py-8 sm:py-10"
+      className="relative min-h-[100dvh] bg-base-bg flex items-center justify-center px-4 py-8 sm:py-10 overflow-hidden"
       style={bgStyle}
     >
+      <div className="light-streaks" aria-hidden="true" />
       <Head>
         <title>{pageTitle}</title>
         <meta
@@ -257,7 +258,7 @@ export default function SmartLinkPage({ smartlink, isAfricanFan, fanCountry, own
         <meta property="og:image" content={smartlink.artwork_url} />
       </Head>
 
-      <div className="w-full max-w-sm glass-card rounded-xl2 shadow-glass p-5 sm:p-6 relative">
+      <div className="relative z-10 w-full max-w-sm glass-card rounded-xl2 shadow-glass p-5 sm:p-6">
         <div className="relative w-full aspect-square rounded-xl overflow-hidden mb-5 bg-base-card">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img

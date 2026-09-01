@@ -38,7 +38,8 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-base-bg text-white">
+    <div className="relative min-h-screen bg-base-bg text-white overflow-hidden">
+      <div className="light-streaks" aria-hidden="true" />
       <Head>
         <title>Sample.fm — SmartLinks &amp; Pre-Saves for Independent Music Creators</title>
         <meta
@@ -47,7 +48,7 @@ export default function HomePage() {
         />
       </Head>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-16 grid md:grid-cols-2 gap-10 md:gap-16 items-center">
+      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-16 grid md:grid-cols-2 gap-10 md:gap-16 items-center">
         <div>
           <div className="inline-flex items-center gap-2 mb-6 px-3 py-1 rounded-full border border-base-border text-xs text-base-muted">
             <span className="w-2 h-2 rounded-full bg-brand" />
