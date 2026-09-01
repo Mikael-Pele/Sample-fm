@@ -62,12 +62,24 @@ export default async function handler(req, res) {
     // ---- Required field validation -------------------------------------
     const artist_name = sanitizeString(payload.artist_name);
     const track_title = sanitizeString(payload.track_title);
-    const artwork_url = sanitizeString(payload.artwork_url);
     const release_date_raw = payload.release_date;
+
+    // Cover art may arrive as a gallery of multiple image URLs. The first
+    // entry (or the one explicitly marked primary via artwork_url) becomes
+    // the banner image rendered on the fan page; the full set is stored so
+    // the dashboard can show the gallery back to the creator.
+    const rawGallery = Array.isArray(payload.artwork_urls)
+      ? payload.artwork_urls
+      : typeof payload.artwork_urls === "string"
+      ? payload.artwork_urls.split(",")
+      : [];
+    const gallery = rawGallery.map((u) => sanitizeString(u)).filter(Boolean);
+
+    const artwork_url = sanitizeString(payload.artwork_url) || gallery[0] || null;
 
     if (!artist_name || !track_title || !artwork_url || !release_date_raw) {
       return res.status(400).json({
-        error: "artist_name, track_title, artwork_url, and release_date are required.",
+        error: "artist_name, track_title, at least one cover image, and release_date are required.",
       });
     }
 
@@ -78,6 +90,12 @@ export default async function handler(req, res) {
 
     if (!isValidUrl(artwork_url)) {
       return res.status(400).json({ error: "artwork_url must be a valid URL." });
+    }
+
+    for (const url of gallery) {
+      if (!isValidUrl(url)) {
+        return res.status(400).json({ error: "One of the cover image URLs is not valid." });
+      }
     }
 
     const platformUrls = {
@@ -129,6 +147,7 @@ export default async function handler(req, res) {
         track_title,
         release_date,
         artwork_url,
+        artwork_urls: gallery.length > 0 ? gallery.join(",") : null,
         is_presave,
         ...platformUrls,
         pixel_fb,

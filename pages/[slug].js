@@ -48,6 +48,9 @@ export async function getServerSideProps({ params, req, query }) {
         track_title: smartlink.track_title,
         release_date: smartlink.release_date.toISOString(),
         artwork_url: smartlink.artwork_url,
+        artwork_urls: smartlink.artwork_urls
+          ? smartlink.artwork_urls.split(",").filter(Boolean)
+          : [smartlink.artwork_url],
         is_presave: smartlink.is_presave,
         url_audiomack: smartlink.url_audiomack,
         url_boomplay: smartlink.url_boomplay,

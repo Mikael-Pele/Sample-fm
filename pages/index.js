@@ -40,18 +40,18 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-base-bg text-white">
       <Head>
-        <title>Sample.fm — SmartLinks &amp; Pre-Saves for African Music Creators</title>
+        <title>Sample.fm — SmartLinks &amp; Pre-Saves for Independent Music Creators</title>
         <meta
           name="description"
-          content="Sample.fm is the elite SmartLink and pre-save platform built for independent African music creators and labels."
+          content="Sample.fm is the elite SmartLink and pre-save platform built for independent music creators and labels, with Paystack billing built in."
         />
       </Head>
 
-      <div className="max-w-6xl mx-auto px-6 py-16 grid md:grid-cols-2 gap-16 items-center">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-16 grid md:grid-cols-2 gap-10 md:gap-16 items-center">
         <div>
           <div className="inline-flex items-center gap-2 mb-6 px-3 py-1 rounded-full border border-base-border text-xs text-base-muted">
             <span className="w-2 h-2 rounded-full bg-brand" />
-            Built for the African music market
+            Built for independent creators
           </div>
           <h1 className="text-4xl md:text-5xl font-extrabold leading-tight mb-6">
             One link.
@@ -163,7 +163,7 @@ export default function HomePage() {
       </div>
 
       <footer className="text-center text-base-muted text-xs pb-10">
-        Sample.fm — SmartLinks &amp; pre-saves engineered for independent African music creators.
+        Sample.fm — SmartLinks &amp; pre-saves engineered for independent music creators.
       </footer>
     </div>
   );

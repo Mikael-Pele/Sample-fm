@@ -30,7 +30,8 @@ model SmartLink {
   artist_name    String
   track_title    String
   release_date   DateTime
-  artwork_url    String
+  artwork_url    String // primary/cover image shown on the fan page
+  artwork_urls   String? // comma-separated gallery of all uploaded cover images
   is_presave     Boolean    @default(false)
 
   url_audiomack  String?

@@ -9,21 +9,21 @@ module.exports = {
     extend: {
       colors: {
         base: {
-          bg: "#0B0B0F",
-          card: "#131316",
-          border: "#232329",
-          muted: "#8A8A93",
+          bg: "#0A0A0C",
+          card: "#121214",
+          border: "#242427",
+          muted: "#71717A",
         },
         brand: {
-          DEFAULT: "#7C5CFC",
-          light: "#9B82FF",
-          dark: "#5B3FE0",
+          DEFAULT: "#D4AF37",
+          light: "#E8C766",
+          dark: "#B8912A",
         },
         audiomack: {
-          DEFAULT: "#FFA200",
+          DEFAULT: "#FF8200",
         },
         boomplay: {
-          DEFAULT: "#F3D93A",
+          DEFAULT: "#FFC107",
         },
         spotify: {
           DEFAULT: "#1DB954",

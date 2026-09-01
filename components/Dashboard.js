@@ -1,5 +1,14 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/router";
+import {
+  AudiomackIcon,
+  BoomplayIcon,
+  SpotifyIcon,
+  AppleMusicIcon,
+  YouTubeMusicIcon,
+  UploadIcon,
+  LockIcon,
+} from "./PlatformIcons";
 
 const PAYSTACK_PLAN_URL =
   process.env.NEXT_PUBLIC_PAYSTACK_PLAN_URL || "https://paystack.com/pay/sample-fm-premium";
@@ -8,7 +17,6 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "";
 const EMPTY_FORM = {
   artist_name: "",
   track_title: "",
-  artwork_url: "",
   release_date: "",
   is_presave: false,
   url_audiomack: "",
@@ -20,40 +28,91 @@ const EMPTY_FORM = {
   pixel_tiktok: "",
 };
 
-function PlatformInput({ label, name, value, onChange, placeholder, accent }) {
+const PLATFORM_FIELDS = [
+  { key: "url_audiomack", label: "Audiomack", Icon: AudiomackIcon, ring: "focus-within:ring-audiomack" },
+  { key: "url_boomplay", label: "Boomplay", Icon: BoomplayIcon, ring: "focus-within:ring-boomplay" },
+  { key: "url_spotify", label: "Spotify", Icon: SpotifyIcon, ring: "focus-within:ring-spotify" },
+  { key: "url_apple", label: "Apple Music", Icon: AppleMusicIcon, ring: "focus-within:ring-apple" },
+  { key: "url_youtube", label: "YouTube Music", Icon: YouTubeMusicIcon, ring: "focus-within:ring-youtube" },
+];
+
+function PlatformInput({ field, value, onChange }) {
+  const { key, label, Icon, ring } = field;
   return (
-    <div>
-      <label className="flex items-center gap-2 text-xs font-semibold text-base-muted mb-1.5">
-        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: accent }} />
-        {label}
-      </label>
-      <input
-        type="url"
-        name={name}
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        className="w-full bg-base-bg border border-base-border rounded-lg px-3.5 py-2.5 text-sm outline-none focus:border-brand transition"
-      />
+    <div
+      className={`flex items-center gap-3 bg-base-bg border border-base-border rounded-lg px-3 py-2 transition focus-within:border-brand focus-within:ring-1 ${ring}`}
+    >
+      <Icon />
+      <div className="min-w-0 flex-1">
+        <label htmlFor={key} className="block text-[11px] font-semibold text-base-muted mb-0.5">
+          {label}
+        </label>
+        <input
+          id={key}
+          type="url"
+          name={key}
+          value={value}
+          onChange={onChange}
+          placeholder={`https://${label.toLowerCase().replace(/\s/g, "")}.com/...`}
+          className="w-full bg-transparent text-sm text-white outline-none placeholder:text-base-muted/60"
+        />
+      </div>
     </div>
   );
 }
 
 function StatTile({ label, value }) {
   return (
-    <div className="glass-card rounded-xl p-5">
-      <div className="text-base-muted text-xs font-semibold uppercase tracking-wide mb-2">
+    <div className="glass-card rounded-xl p-4 sm:p-5 min-w-0">
+      <div className="text-base-muted text-xs font-semibold uppercase tracking-wide mb-2 truncate">
         {label}
       </div>
-      <div className="text-2xl font-extrabold text-white">{value}</div>
+      <div className="text-xl sm:text-2xl font-extrabold text-white truncate">{value}</div>
     </div>
   );
+}
+
+function averageColorFromImage(url) {
+  return new Promise((resolve) => {
+    try {
+      const img = new window.Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => {
+        try {
+          const canvas = document.createElement("canvas");
+          canvas.width = 8;
+          canvas.height = 8;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, 8, 8);
+          const { data } = ctx.getImageData(0, 0, 8, 8);
+          let r = 0;
+          let g = 0;
+          let b = 0;
+          const count = data.length / 4;
+          for (let i = 0; i < data.length; i += 4) {
+            r += data[i];
+            g += data[i + 1];
+            b += data[i + 2];
+          }
+          resolve(`rgb(${Math.round(r / count)}, ${Math.round(g / count)}, ${Math.round(b / count)})`);
+        } catch (err) {
+          resolve(null);
+        }
+      };
+      img.onerror = () => resolve(null);
+      img.src = url;
+    } catch (err) {
+      resolve(null);
+    }
+  });
 }
 
 export default function Dashboard({ initialUser }) {
   const router = useRouter();
   const [user, setUser] = useState(initialUser);
   const [form, setForm] = useState(EMPTY_FORM);
+  const [artworkUrls, setArtworkUrls] = useState([""]);
+  const [artworkPreviewColors, setArtworkPreviewColors] = useState({});
   const [links, setLinks] = useState([]);
   const [analytics, setAnalytics] = useState(null);
   const [creating, setCreating] = useState(false);
@@ -95,6 +154,34 @@ export default function Dashboard({ initialUser }) {
     }));
   }
 
+  function handleArtworkChange(index, value) {
+    setArtworkUrls((prev) => {
+      const next = [...prev];
+      next[index] = value;
+      return next;
+    });
+    if (value) {
+      averageColorFromImage(value).then((color) => {
+        if (color) {
+          setArtworkPreviewColors((prev) => ({ ...prev, [index]: color }));
+        }
+      });
+    }
+  }
+
+  function addArtworkField() {
+    setArtworkUrls((prev) => [...prev, ""]);
+  }
+
+  function removeArtworkField(index) {
+    setArtworkUrls((prev) => prev.filter((_, i) => i !== index));
+    setArtworkPreviewColors((prev) => {
+      const next = { ...prev };
+      delete next[index];
+      return next;
+    });
+  }
+
   async function handleCreateLink(e) {
     e.preventDefault();
     setCreateError("");
@@ -102,11 +189,17 @@ export default function Dashboard({ initialUser }) {
     setDroppedFieldsNotice([]);
     setCreating(true);
 
+    const cleanGallery = artworkUrls.map((u) => u.trim()).filter(Boolean);
+
     try {
       const res = await fetch("/api/links/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          artwork_url: cleanGallery[0] || "",
+          artwork_urls: cleanGallery,
+        }),
       });
       const data = await res.json();
 
@@ -121,6 +214,8 @@ export default function Dashboard({ initialUser }) {
         setDroppedFieldsNotice(data.dropped_fields);
       }
       setForm(EMPTY_FORM);
+      setArtworkUrls([""]);
+      setArtworkPreviewColors({});
       loadLinks();
       loadAnalytics();
     } catch (err) {
@@ -139,6 +234,7 @@ export default function Dashboard({ initialUser }) {
     if (res.ok) {
       const data = await res.json();
       setUser(data.user);
+      loadAnalytics();
     }
   }
 
@@ -165,26 +261,54 @@ export default function Dashboard({ initialUser }) {
     }
   }
 
+  function exportEmailsCsv() {
+    if (!analytics || !analytics.presaves || analytics.presaves.length === 0) return;
+    const header = "fan_email,track_title,artist_name,provider,status,collected_at\n";
+    const rows = analytics.presaves
+      .map((p) =>
+        [
+          p.fan_email,
+          `"${p.track_title.replace(/"/g, '""')}"`,
+          `"${p.artist_name.replace(/"/g, '""')}"`,
+          p.provider,
+          p.processed ? "Delivered" : "Queued",
+          new Date(p.created_at).toISOString(),
+        ].join(",")
+      )
+      .join("\n");
+    const blob = new Blob([header + rows], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "sample-fm-fan-emails.csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
     router.push("/");
   }
 
   return (
-    <div className="min-h-screen bg-base-bg text-white">
+    <div className="min-h-screen bg-base-bg text-white overflow-x-hidden">
       <header className="border-b border-base-border sticky top-0 bg-base-bg/95 backdrop-blur z-20">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-brand flex items-center justify-center font-black text-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-8 h-8 rounded-lg bg-brand flex items-center justify-center font-black text-sm text-base-bg shrink-0">
               S
             </div>
-            <span className="font-bold text-lg">Sample.fm</span>
+            <span className="font-bold text-lg truncate">Sample.fm</span>
           </div>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-base-muted hidden sm:inline">{user?.email}</span>
+          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+            <span className="text-sm text-base-muted hidden md:inline truncate max-w-[180px]">
+              {user?.email}
+            </span>
             <span
-              className={`text-xs font-bold px-2.5 py-1 rounded-full ${
-                isPro ? "bg-brand text-white" : "bg-base-card text-base-muted border border-base-border"
+              className={`text-xs font-bold px-2.5 py-1 rounded-full whitespace-nowrap ${
+                isPro ? "bg-brand text-base-bg" : "bg-base-card text-base-muted border border-base-border"
               }`}
             >
               {isPro ? "PREMIUM" : "FREE"}
@@ -192,7 +316,7 @@ export default function Dashboard({ initialUser }) {
             <button
               type="button"
               onClick={handleLogout}
-              className="text-sm text-base-muted hover:text-white transition"
+              className="text-sm text-base-muted hover:text-white transition whitespace-nowrap"
             >
               Sign out
             </button>
@@ -200,30 +324,30 @@ export default function Dashboard({ initialUser }) {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-6 py-10 space-y-10">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10 space-y-8 sm:space-y-10">
         {/* ---------------- Billing Component ---------------- */}
-        <section className="glass-card rounded-xl2 p-6">
+        <section className="glass-card rounded-xl2 p-5 sm:p-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-            <div>
+            <div className="min-w-0">
               <div className="text-xs font-semibold text-base-muted uppercase tracking-wide mb-1">
                 Account Tier
               </div>
-              <div className="text-2xl font-extrabold mb-1">
+              <div className="text-xl sm:text-2xl font-extrabold mb-1">
                 {isPro ? "Premium — $16/mo" : "Free Tier"}
               </div>
               <p className="text-sm text-base-muted max-w-md">
                 {isPro
-                  ? "Retargeting pixels, custom domains, and zero Sample.fm branding are unlocked on your links."
-                  : "Unlimited basic SmartLinks with the Sample.fm badge. Upgrade to unlock retargeting pixels and custom domains."}
+                  ? "Retargeting pixels, custom domains, fan email exports, and zero Sample.fm branding are unlocked on your links."
+                  : "Unlimited basic SmartLinks with the Sample.fm badge. Upgrade to unlock retargeting pixels, custom domains, and your fan email database."}
               </p>
             </div>
-            <div className="flex flex-col gap-3 items-stretch md:items-end">
+            <div className="flex flex-col gap-3 items-stretch md:items-end shrink-0">
               {!isPro && (
                 <a
                   href={PAYSTACK_PLAN_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="bg-brand hover:bg-brand-dark transition text-white font-semibold rounded-lg px-6 py-3 text-sm text-center"
+                  className="bg-brand hover:bg-brand-dark transition text-base-bg font-bold rounded-lg px-6 py-3 text-sm text-center"
                 >
                   Upgrade to Premium — $16/mo
                 </a>
@@ -241,8 +365,11 @@ export default function Dashboard({ initialUser }) {
           </div>
 
           {isPro && (
-            <form onSubmit={handleSaveDomain} className="mt-6 pt-6 border-t border-base-border flex flex-col sm:flex-row gap-3 items-start sm:items-end">
-              <div className="flex-1 w-full">
+            <form
+              onSubmit={handleSaveDomain}
+              className="mt-6 pt-6 border-t border-base-border flex flex-col sm:flex-row gap-3 items-start sm:items-end"
+            >
+              <div className="flex-1 w-full min-w-0">
                 <label className="block text-xs font-semibold text-base-muted mb-1.5">
                   Custom Domain
                 </label>
@@ -257,7 +384,7 @@ export default function Dashboard({ initialUser }) {
               <button
                 type="submit"
                 disabled={domainSaving}
-                className="bg-base-card border border-base-border hover:border-brand transition text-white font-semibold rounded-lg px-5 py-2.5 text-sm disabled:opacity-60"
+                className="w-full sm:w-auto bg-base-card border border-base-border hover:border-brand transition text-white font-semibold rounded-lg px-5 py-2.5 text-sm disabled:opacity-60"
               >
                 {domainSaving ? "Saving…" : "Save Domain"}
               </button>
@@ -269,7 +396,7 @@ export default function Dashboard({ initialUser }) {
         {/* ---------------- Analytics Panel ---------------- */}
         <section>
           <h2 className="text-lg font-bold mb-4">Analytics</h2>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
             <StatTile label="Total Clicks" value={analytics ? analytics.total_clicks : "—"} />
             <StatTile
               label="Top Platform"
@@ -281,64 +408,121 @@ export default function Dashboard({ initialUser }) {
             />
             <StatTile
               label="Pre-Saves Collected"
-              value={analytics ? analytics.presaves.length : "—"}
+              value={analytics ? analytics.presave_count : "—"}
             />
           </div>
 
-          <div className="glass-card rounded-xl2 overflow-hidden">
-            <div className="px-5 py-4 border-b border-base-border font-semibold text-sm">
-              Fan Emails Collected via Pre-Saves
-            </div>
-            <div className="max-h-72 overflow-y-auto">
-              {analytics && analytics.presaves.length > 0 ? (
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="text-left text-base-muted text-xs uppercase tracking-wide">
-                      <th className="px-5 py-2 font-semibold">Fan Email</th>
-                      <th className="px-5 py-2 font-semibold">Track</th>
-                      <th className="px-5 py-2 font-semibold">Provider</th>
-                      <th className="px-5 py-2 font-semibold">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {analytics.presaves.map((p) => (
-                      <tr key={p.id} className="border-t border-base-border/60">
-                        <td className="px-5 py-2.5">{p.fan_email}</td>
-                        <td className="px-5 py-2.5 text-base-muted">
-                          {p.artist_name} — {p.track_title}
-                        </td>
-                        <td className="px-5 py-2.5 text-base-muted">{p.provider}</td>
-                        <td className="px-5 py-2.5">
-                          <span
-                            className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                              p.processed
-                                ? "bg-emerald-950 text-emerald-400"
-                                : "bg-amber-950 text-amber-400"
-                            }`}
-                          >
-                            {p.processed ? "Delivered" : "Queued"}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              ) : (
-                <div className="px-5 py-8 text-center text-base-muted text-sm">
-                  No pre-saves collected yet.
-                </div>
+          <div className="glass-card rounded-xl2 overflow-hidden relative">
+            <div className="px-4 sm:px-5 py-4 border-b border-base-border font-semibold text-sm flex items-center justify-between gap-3">
+              <span>Fan Emails Collected via Pre-Saves</span>
+              {isPro && analytics && analytics.presaves.length > 0 && (
+                <button
+                  type="button"
+                  onClick={exportEmailsCsv}
+                  className="text-xs font-semibold text-brand-light hover:text-brand transition whitespace-nowrap"
+                >
+                  Export CSV
+                </button>
               )}
             </div>
+
+            {analytics && analytics.presaves_locked ? (
+              <div className="px-4 sm:px-5 py-10 relative">
+                <div className="gate-blur select-none pointer-events-none">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="text-left text-base-muted text-xs uppercase tracking-wide">
+                        <th className="px-2 py-2 font-semibold">Fan Email</th>
+                        <th className="px-2 py-2 font-semibold">Track</th>
+                        <th className="px-2 py-2 font-semibold">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[1, 2, 3].map((i) => (
+                        <tr key={i} className="border-t border-base-border/60">
+                          <td className="px-2 py-2.5">fan{i}@example.com</td>
+                          <td className="px-2 py-2.5 text-base-muted">Sample Track {i}</td>
+                          <td className="px-2 py-2.5 text-emerald-400">Queued</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-base-card/85 px-6 text-center">
+                  <LockIcon className="text-brand mb-3" />
+                  <p className="text-sm font-semibold text-white mb-1">
+                    {analytics.presave_count} pre-save{analytics.presave_count === 1 ? "" : "s"}{" "}
+                    collected
+                  </p>
+                  <p className="text-sm text-base-muted mb-4 max-w-xs">
+                    Upgrade to Premium ($16/mo) to unlock, view, and export your fan email
+                    database.
+                  </p>
+                  <a
+                    href={PAYSTACK_PLAN_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-brand hover:bg-brand-dark transition text-base-bg text-xs font-bold rounded-lg px-4 py-2"
+                  >
+                    Upgrade Now
+                  </a>
+                </div>
+              </div>
+            ) : (
+              <div className="max-h-72 overflow-y-auto overflow-x-auto">
+                {analytics && analytics.presaves.length > 0 ? (
+                  <table className="w-full text-sm min-w-[480px]">
+                    <thead>
+                      <tr className="text-left text-base-muted text-xs uppercase tracking-wide">
+                        <th className="px-4 sm:px-5 py-2 font-semibold">Fan Email</th>
+                        <th className="px-4 sm:px-5 py-2 font-semibold">Track</th>
+                        <th className="px-4 sm:px-5 py-2 font-semibold">Provider</th>
+                        <th className="px-4 sm:px-5 py-2 font-semibold">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {analytics.presaves.map((p) => (
+                        <tr key={p.id} className="border-t border-base-border/60">
+                          <td className="px-4 sm:px-5 py-2.5 whitespace-nowrap">{p.fan_email}</td>
+                          <td className="px-4 sm:px-5 py-2.5 text-base-muted whitespace-nowrap">
+                            {p.artist_name} — {p.track_title}
+                          </td>
+                          <td className="px-4 sm:px-5 py-2.5 text-base-muted">{p.provider}</td>
+                          <td className="px-4 sm:px-5 py-2.5">
+                            <span
+                              className={`text-xs font-semibold px-2 py-0.5 rounded-full whitespace-nowrap ${
+                                p.processed
+                                  ? "bg-emerald-950 text-emerald-400"
+                                  : "bg-amber-950 text-amber-400"
+                              }`}
+                            >
+                              {p.processed ? "Delivered" : "Queued"}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <div className="px-5 py-8 text-center text-base-muted text-sm">
+                    No pre-saves collected yet.
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </section>
 
         {/* ---------------- Create SmartLink Form ---------------- */}
-        <section className="grid lg:grid-cols-5 gap-8">
-          <form onSubmit={handleCreateLink} className="lg:col-span-3 glass-card rounded-xl2 p-6 space-y-6">
+        <section className="grid lg:grid-cols-5 gap-6 lg:gap-8">
+          <form
+            onSubmit={handleCreateLink}
+            className="lg:col-span-3 glass-card rounded-xl2 p-5 sm:p-6 space-y-6 min-w-0"
+          >
             <h2 className="text-lg font-bold">Create a New SmartLink</h2>
 
             <div className="grid sm:grid-cols-2 gap-4">
-              <div>
+              <div className="min-w-0">
                 <label className="block text-xs font-semibold text-base-muted mb-1.5">
                   Artist Name
                 </label>
@@ -348,11 +532,11 @@ export default function Dashboard({ initialUser }) {
                   required
                   value={form.artist_name}
                   onChange={handleFieldChange}
-                  placeholder="e.g. Ayra Starr"
+                  placeholder="e.g. Kofi Solar"
                   className="w-full bg-base-bg border border-base-border rounded-lg px-3.5 py-2.5 text-sm outline-none focus:border-brand transition"
                 />
               </div>
-              <div>
+              <div className="min-w-0">
                 <label className="block text-xs font-semibold text-base-muted mb-1.5">
                   Track / Album Title
                 </label>
@@ -362,29 +546,67 @@ export default function Dashboard({ initialUser }) {
                   required
                   value={form.track_title}
                   onChange={handleFieldChange}
-                  placeholder="e.g. Rush"
+                  placeholder="e.g. Golden Hour"
                   className="w-full bg-base-bg border border-base-border rounded-lg px-3.5 py-2.5 text-sm outline-none focus:border-brand transition"
                 />
               </div>
             </div>
 
+            {/* ---------------- Cover Art Gallery ---------------- */}
             <div>
               <label className="block text-xs font-semibold text-base-muted mb-1.5">
-                Artwork URL
+                Cover Art (one or more images — the first is the banner)
               </label>
-              <input
-                type="url"
-                name="artwork_url"
-                required
-                value={form.artwork_url}
-                onChange={handleFieldChange}
-                placeholder="https://cdn.example.com/artwork.jpg"
-                className="w-full bg-base-bg border border-base-border rounded-lg px-3.5 py-2.5 text-sm outline-none focus:border-brand transition"
-              />
+              <div className="space-y-2">
+                {artworkUrls.map((url, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <div
+                      className="w-11 h-11 rounded-md overflow-hidden bg-base-bg border border-base-border shrink-0 flex items-center justify-center"
+                      style={
+                        !url
+                          ? { backgroundColor: artworkPreviewColors[index] || undefined }
+                          : undefined
+                      }
+                    >
+                      {url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={url} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <UploadIcon className="text-base-muted" />
+                      )}
+                    </div>
+                    <input
+                      type="url"
+                      required={index === 0}
+                      value={url}
+                      onChange={(e) => handleArtworkChange(index, e.target.value)}
+                      placeholder="https://cdn.example.com/artwork.jpg"
+                      className="flex-1 min-w-0 bg-base-bg border border-base-border rounded-lg px-3.5 py-2.5 text-sm outline-none focus:border-brand transition"
+                    />
+                    {artworkUrls.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeArtworkField(index)}
+                        className="text-base-muted hover:text-red-400 transition text-lg shrink-0 px-1"
+                        aria-label="Remove image"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={addArtworkField}
+                className="mt-2 text-xs font-semibold text-brand-light hover:text-brand transition"
+              >
+                + Add another cover image
+              </button>
             </div>
 
             <div className="grid sm:grid-cols-2 gap-4 items-end">
-              <div>
+              <div className="min-w-0">
                 <label className="block text-xs font-semibold text-base-muted mb-1.5">
                   Release Date
                 </label>
@@ -397,63 +619,31 @@ export default function Dashboard({ initialUser }) {
                   className="w-full bg-base-bg border border-base-border rounded-lg px-3.5 py-2.5 text-sm outline-none focus:border-brand transition"
                 />
               </div>
-              <label className="flex items-center gap-2.5 text-sm bg-base-bg border border-base-border rounded-lg px-3.5 py-2.5">
+              <label className="flex items-center gap-2.5 text-sm bg-base-bg border border-base-border rounded-lg px-3.5 py-2.5 min-w-0">
                 <input
                   type="checkbox"
                   name="is_presave"
                   checked={form.is_presave}
                   onChange={handleFieldChange}
-                  className="w-4 h-4 accent-brand"
+                  className="w-4 h-4 accent-brand shrink-0"
                 />
-                Treat as Pre-Save (unreleased)
+                <span className="truncate">Treat as Pre-Save (unreleased)</span>
               </label>
             </div>
 
             <div>
               <h3 className="text-sm font-bold mb-3 text-base-muted uppercase tracking-wide">
-                African Market Multi-Platform URL Grid
+                Multi-Platform Streaming Grid
               </h3>
-              <div className="grid sm:grid-cols-2 gap-4">
-                <PlatformInput
-                  label="Audiomack"
-                  name="url_audiomack"
-                  value={form.url_audiomack}
-                  onChange={handleFieldChange}
-                  placeholder="https://audiomack.com/..."
-                  accent="#FFA200"
-                />
-                <PlatformInput
-                  label="Boomplay"
-                  name="url_boomplay"
-                  value={form.url_boomplay}
-                  onChange={handleFieldChange}
-                  placeholder="https://boomplay.com/..."
-                  accent="#F3D93A"
-                />
-                <PlatformInput
-                  label="Spotify"
-                  name="url_spotify"
-                  value={form.url_spotify}
-                  onChange={handleFieldChange}
-                  placeholder="https://open.spotify.com/..."
-                  accent="#1DB954"
-                />
-                <PlatformInput
-                  label="Apple Music"
-                  name="url_apple"
-                  value={form.url_apple}
-                  onChange={handleFieldChange}
-                  placeholder="https://music.apple.com/..."
-                  accent="#FA243C"
-                />
-                <PlatformInput
-                  label="YouTube Music"
-                  name="url_youtube"
-                  value={form.url_youtube}
-                  onChange={handleFieldChange}
-                  placeholder="https://music.youtube.com/..."
-                  accent="#FF0000"
-                />
+              <div className="grid sm:grid-cols-2 gap-3">
+                {PLATFORM_FIELDS.map((field) => (
+                  <PlatformInput
+                    key={field.key}
+                    field={field}
+                    value={form[field.key]}
+                    onChange={handleFieldChange}
+                  />
+                ))}
               </div>
             </div>
 
@@ -463,7 +653,7 @@ export default function Dashboard({ initialUser }) {
                 Advanced Retargeting &amp; Branding (Premium)
               </h3>
               <div className={`grid sm:grid-cols-2 gap-4 ${!isPro ? "gate-blur" : ""}`}>
-                <div>
+                <div className="min-w-0">
                   <label className="block text-xs font-semibold text-base-muted mb-1.5">
                     Facebook Pixel ID
                   </label>
@@ -477,7 +667,7 @@ export default function Dashboard({ initialUser }) {
                     className="w-full bg-base-bg border border-base-border rounded-lg px-3.5 py-2.5 text-sm outline-none focus:border-brand transition"
                   />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <label className="block text-xs font-semibold text-base-muted mb-1.5">
                     TikTok Pixel ID
                   </label>
@@ -494,22 +684,14 @@ export default function Dashboard({ initialUser }) {
               </div>
 
               {!isPro && (
-                <div className="absolute inset-0 top-8 flex flex-col items-center justify-center bg-base-card/70 rounded-xl border border-dashed border-base-border animate-fade-in">
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" className="mb-2 text-brand-light">
-                    <path
-                      d="M6 10V8a6 6 0 1112 0v2M5 10h14a1 1 0 011 1v9a1 1 0 01-1 1H5a1 1 0 01-1-1v-9a1 1 0 011-1z"
-                      stroke="currentColor"
-                      strokeWidth="1.8"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
+                <div className="absolute inset-0 top-8 flex flex-col items-center justify-center bg-base-card/75 rounded-xl border border-dashed border-base-border animate-fade-in px-4 text-center">
+                  <LockIcon className="text-brand mb-2" />
                   <p className="text-sm font-semibold mb-2">Unlock with Premium — $16/mo</p>
                   <a
                     href={PAYSTACK_PLAN_URL}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="bg-brand hover:bg-brand-dark transition text-white text-xs font-semibold rounded-lg px-4 py-2"
+                    className="bg-brand hover:bg-brand-dark transition text-base-bg text-xs font-bold rounded-lg px-4 py-2"
                   >
                     Upgrade Now
                   </a>
@@ -518,7 +700,7 @@ export default function Dashboard({ initialUser }) {
             </div>
 
             {createError && (
-              <div className="text-sm text-red-400 bg-red-950/40 border border-red-900 rounded-lg px-3 py-2">
+              <div className="text-sm text-red-400 bg-red-950/40 border border-red-900 rounded-lg px-3 py-2 break-words">
                 {createError}
               </div>
             )}
@@ -537,14 +719,14 @@ export default function Dashboard({ initialUser }) {
             <button
               type="submit"
               disabled={creating}
-              className="w-full bg-brand hover:bg-brand-dark disabled:opacity-60 transition text-white font-semibold rounded-lg py-3 text-sm"
+              className="w-full bg-brand hover:bg-brand-dark disabled:opacity-60 transition text-base-bg font-bold rounded-lg py-3 text-sm"
             >
               {creating ? "Creating…" : "Create SmartLink"}
             </button>
           </form>
 
           {/* ---------------- SmartLinks List ---------------- */}
-          <div className="lg:col-span-2 glass-card rounded-xl2 p-6">
+          <div className="lg:col-span-2 glass-card rounded-xl2 p-5 sm:p-6 min-w-0">
             <h2 className="text-lg font-bold mb-4">Your SmartLinks</h2>
             <div className="space-y-3 max-h-[640px] overflow-y-auto pr-1">
               {links.length === 0 && (
@@ -560,12 +742,12 @@ export default function Dashboard({ initialUser }) {
                   rel="noopener noreferrer"
                   className="block bg-base-bg border border-base-border rounded-lg p-3.5 hover:border-brand transition"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={link.artwork_url}
                       alt={link.track_title}
-                      className="w-12 h-12 rounded-md object-cover bg-base-card flex-shrink-0"
+                      className="w-12 h-12 rounded-md object-cover bg-base-card shrink-0"
                     />
                     <div className="min-w-0">
                       <div className="font-semibold text-sm truncate">{link.track_title}</div>
@@ -575,7 +757,7 @@ export default function Dashboard({ initialUser }) {
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 mt-2 text-xs text-base-muted">
+                  <div className="flex items-center gap-3 mt-2 text-xs text-base-muted flex-wrap">
                     <span>{link._count?.analytics ?? 0} clicks</span>
                     <span>{link._count?.presaves ?? 0} pre-saves</span>
                     {link.is_presave && (

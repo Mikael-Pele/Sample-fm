@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import Head from "next/head";
 import {
   AudiomackIcon,
@@ -14,6 +14,67 @@ function formatReleaseDate(dateString) {
   return d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 }
 
+// Samples a small canvas copy of the current cover image and returns its
+// average RGB color, used to subtly tint the page background so it shifts
+// with the artwork — without ever loading an external color-extraction
+// library (keeps the page under the 200KB budget).
+function useAverageColor(imageUrl) {
+  const [color, setColor] = useState(null);
+  const cache = useRef({});
+
+  useEffect(() => {
+    if (!imageUrl) {
+      setColor(null);
+      return;
+    }
+    if (cache.current[imageUrl]) {
+      setColor(cache.current[imageUrl]);
+      return;
+    }
+
+    let cancelled = false;
+    const img = new window.Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      if (cancelled) return;
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = 10;
+        canvas.height = 10;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, 10, 10);
+        const { data } = ctx.getImageData(0, 0, 10, 10);
+        let r = 0;
+        let g = 0;
+        let b = 0;
+        const count = data.length / 4;
+        for (let i = 0; i < data.length; i += 4) {
+          r += data[i];
+          g += data[i + 1];
+          b += data[i + 2];
+        }
+        const rgb = `${Math.round(r / count)}, ${Math.round(g / count)}, ${Math.round(b / count)}`;
+        cache.current[imageUrl] = rgb;
+        if (!cancelled) setColor(rgb);
+      } catch (err) {
+        // Canvas can throw on cross-origin images without CORS headers —
+        // fail silently and keep the default flat background.
+        if (!cancelled) setColor(null);
+      }
+    };
+    img.onerror = () => {
+      if (!cancelled) setColor(null);
+    };
+    img.src = imageUrl;
+
+    return () => {
+      cancelled = true;
+    };
+  }, [imageUrl]);
+
+  return color;
+}
+
 export default function SmartLinkPage({ smartlink, isAfricanFan, fanCountry, ownerIsPro }) {
   const [presaveModalOpen, setPresaveModalOpen] = useState(false);
   const [pendingPlatform, setPendingPlatform] = useState(null);
@@ -21,6 +82,15 @@ export default function SmartLinkPage({ smartlink, isAfricanFan, fanCountry, own
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [activeImage, setActiveImage] = useState(0);
+
+  const gallery =
+    Array.isArray(smartlink.artwork_urls) && smartlink.artwork_urls.length > 0
+      ? smartlink.artwork_urls
+      : [smartlink.artwork_url];
+
+  const currentImageUrl = gallery[activeImage] || gallery[0];
+  const avgColor = useAverageColor(currentImageUrl);
 
   const isPresaveMode =
     smartlink.is_presave || new Date(smartlink.release_date).getTime() > Date.now();
@@ -32,8 +102,6 @@ export default function SmartLinkPage({ smartlink, isAfricanFan, fanCountry, own
         label: "Audiomack",
         url: smartlink.url_audiomack,
         Icon: AudiomackIcon,
-        accentBg: "bg-audiomack/10",
-        accentText: "text-audiomack",
         accentBorder: "hover:border-audiomack",
         buttonBg: "bg-audiomack",
       },
@@ -42,8 +110,6 @@ export default function SmartLinkPage({ smartlink, isAfricanFan, fanCountry, own
         label: "Boomplay",
         url: smartlink.url_boomplay,
         Icon: BoomplayIcon,
-        accentBg: "bg-boomplay/10",
-        accentText: "text-boomplay",
         accentBorder: "hover:border-boomplay",
         buttonBg: "bg-boomplay",
       },
@@ -52,8 +118,6 @@ export default function SmartLinkPage({ smartlink, isAfricanFan, fanCountry, own
         label: "Spotify",
         url: smartlink.url_spotify,
         Icon: SpotifyIcon,
-        accentBg: "bg-spotify/10",
-        accentText: "text-spotify",
         accentBorder: "hover:border-spotify",
         buttonBg: "bg-spotify",
       },
@@ -62,8 +126,6 @@ export default function SmartLinkPage({ smartlink, isAfricanFan, fanCountry, own
         label: "Apple Music",
         url: smartlink.url_apple,
         Icon: AppleMusicIcon,
-        accentBg: "bg-apple/10",
-        accentText: "text-apple",
         accentBorder: "hover:border-apple",
         buttonBg: "bg-apple",
       },
@@ -72,8 +134,6 @@ export default function SmartLinkPage({ smartlink, isAfricanFan, fanCountry, own
         label: "YouTube Music",
         url: smartlink.url_youtube,
         Icon: YouTubeMusicIcon,
-        accentBg: "bg-youtube/10",
-        accentText: "text-youtube",
         accentBorder: "hover:border-youtube",
         buttonBg: "bg-youtube",
       },
@@ -81,14 +141,14 @@ export default function SmartLinkPage({ smartlink, isAfricanFan, fanCountry, own
 
     if (!isAfricanFan) return all;
 
-    // Geo-Targeting: bubble Audiomack and Boomplay to the top of the stack
-    // for fans detected inside African markets.
-    const africanFirst = ["audiomack", "boomplay"];
+    // Local-market priority: fans detected in supported markets see
+    // Audiomack and Boomplay bubbled to the top of the stack.
+    const localFirst = ["audiomack", "boomplay"];
     return [...all].sort((a, b) => {
-      const aIsAfricanPlatform = africanFirst.includes(a.key);
-      const bIsAfricanPlatform = africanFirst.includes(b.key);
-      if (aIsAfricanPlatform && !bIsAfricanPlatform) return -1;
-      if (!aIsAfricanPlatform && bIsAfricanPlatform) return 1;
+      const aLocal = localFirst.includes(a.key);
+      const bLocal = localFirst.includes(b.key);
+      if (aLocal && !bLocal) return -1;
+      if (!aLocal && bLocal) return 1;
       return 0;
     });
   }, [smartlink, isAfricanFan]);
@@ -106,7 +166,6 @@ export default function SmartLinkPage({ smartlink, isAfricanFan, fanCountry, own
           }),
         });
       } catch (err) {
-        // Analytics failures should never block the fan from reaching music.
         console.error("track click failed", err);
       }
     },
@@ -168,9 +227,18 @@ export default function SmartLinkPage({ smartlink, isAfricanFan, fanCountry, own
   }
 
   const pageTitle = `${smartlink.track_title} — ${smartlink.artist_name} | Sample.fm`;
+  const bgStyle = avgColor
+    ? {
+        backgroundImage: `radial-gradient(circle at 50% 0%, rgba(${avgColor}, 0.35), transparent 60%), radial-gradient(circle at 50% 100%, rgba(${avgColor}, 0.18), transparent 70%)`,
+        transition: "background-image 700ms ease",
+      }
+    : undefined;
 
   return (
-    <div className="min-h-screen bg-base-bg flex items-center justify-center px-4 py-10">
+    <div
+      className="min-h-[100dvh] bg-base-bg flex items-center justify-center px-4 py-8 sm:py-10"
+      style={bgStyle}
+    >
       <Head>
         <title>{pageTitle}</title>
         <meta
@@ -181,22 +249,41 @@ export default function SmartLinkPage({ smartlink, isAfricanFan, fanCountry, own
         <meta property="og:image" content={smartlink.artwork_url} />
       </Head>
 
-      <div className="w-full max-w-sm glass-card rounded-xl2 shadow-glass p-6 relative">
-        <div className="w-full aspect-square rounded-xl overflow-hidden mb-5 bg-base-card">
+      <div className="w-full max-w-sm glass-card rounded-xl2 shadow-glass p-5 sm:p-6 relative">
+        <div className="relative w-full aspect-square rounded-xl overflow-hidden mb-5 bg-base-card">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={smartlink.artwork_url}
+            src={currentImageUrl}
             alt={`${smartlink.track_title} artwork`}
             className="w-full h-full object-cover"
             loading="eager"
+            width={600}
+            height={600}
           />
+          {gallery.length > 1 && (
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-black/40 backdrop-blur px-2 py-1 rounded-full">
+              {gallery.map((_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => setActiveImage(i)}
+                  aria-label={`Show cover image ${i + 1}`}
+                  className={`w-1.5 h-1.5 rounded-full transition ${
+                    i === activeImage ? "bg-brand w-4" : "bg-white/50"
+                  }`}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
-        <div className="text-center mb-6">
-          <h1 className="text-xl font-extrabold text-white leading-tight">
+        <div className="text-center mb-6 min-h-[4.5rem]">
+          <h1 className="text-xl font-extrabold text-white leading-tight break-words">
             {smartlink.track_title}
           </h1>
-          <p className="text-base-muted text-sm font-medium mt-1">{smartlink.artist_name}</p>
+          <p className="text-base-muted text-sm font-medium mt-1 break-words">
+            {smartlink.artist_name}
+          </p>
           {isPresaveMode && (
             <p className="text-xs text-brand-light font-semibold mt-2 uppercase tracking-wide">
               Releasing {formatReleaseDate(smartlink.release_date)}
@@ -210,14 +297,14 @@ export default function SmartLinkPage({ smartlink, isAfricanFan, fanCountry, own
               key={platform.key}
               type="button"
               onClick={() => handlePlatformClick(platform)}
-              className={`w-full flex items-center gap-3 bg-base-bg border border-base-border rounded-xl px-4 py-3 transition ${platform.accentBorder}`}
+              className={`w-full flex items-center gap-3 bg-base-bg border border-base-border rounded-xl px-3.5 sm:px-4 py-3 transition ${platform.accentBorder}`}
             >
               <platform.Icon />
-              <span className="flex-1 text-left text-sm font-semibold text-white">
+              <span className="flex-1 min-w-0 text-left text-sm font-semibold text-white truncate">
                 {platform.label}
               </span>
               <span
-                className={`text-xs font-bold uppercase tracking-wide px-3 py-1.5 rounded-lg text-base-bg ${platform.buttonBg}`}
+                className={`text-xs font-bold uppercase tracking-wide px-3 py-1.5 rounded-lg text-base-bg shrink-0 ${platform.buttonBg}`}
               >
                 {isPresaveMode ? "Pre-Save" : "Play"}
               </span>
@@ -234,7 +321,7 @@ export default function SmartLinkPage({ smartlink, isAfricanFan, fanCountry, own
         {!ownerIsPro && (
           <a
             href="/"
-            className="mt-6 flex items-center justify-center gap-1.5 text-xs text-base-muted hover:text-white transition"
+            className="mt-6 flex flex-wrap items-center justify-center gap-1.5 text-center text-xs text-base-muted hover:text-white transition"
           >
             <SampleFmMark />
             Powered by <span className="font-semibold text-white">Sample.fm</span> — Create Your
@@ -245,7 +332,7 @@ export default function SmartLinkPage({ smartlink, isAfricanFan, fanCountry, own
 
       {presaveModalOpen && pendingPlatform && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center px-4 z-50">
-          <div className="w-full max-w-sm glass-card rounded-xl2 p-6 relative animate-fade-in">
+          <div className="w-full max-w-sm glass-card rounded-xl2 p-5 sm:p-6 relative animate-fade-in">
             <button
               type="button"
               onClick={closeModal}
@@ -257,7 +344,7 @@ export default function SmartLinkPage({ smartlink, isAfricanFan, fanCountry, own
 
             {!submitted ? (
               <>
-                <h2 className="text-lg font-bold text-white mb-1">
+                <h2 className="text-lg font-bold text-white mb-1 pr-6">
                   Pre-Save on {pendingPlatform.label}
                 </h2>
                 <p className="text-sm text-base-muted mb-5">
@@ -274,13 +361,13 @@ export default function SmartLinkPage({ smartlink, isAfricanFan, fanCountry, own
                     placeholder="you@example.com"
                     className="w-full bg-base-bg border border-base-border rounded-lg px-3.5 py-2.5 text-sm text-white outline-none focus:border-brand transition"
                   />
-                  {submitError && <p className="text-sm text-red-400">{submitError}</p>}
+                  {submitError && <p className="text-sm text-red-400 break-words">{submitError}</p>}
                   <button
                     type="submit"
                     disabled={submitting}
                     className={`w-full text-base-bg font-bold rounded-lg py-2.5 text-sm transition disabled:opacity-60 ${pendingPlatform.buttonBg}`}
                   >
-                    {submitting ? "Submitting…" : `Confirm Pre-Save`}
+                    {submitting ? "Submitting…" : "Confirm Pre-Save"}
                   </button>
                 </form>
               </>
@@ -289,8 +376,8 @@ export default function SmartLinkPage({ smartlink, isAfricanFan, fanCountry, own
                 <div className="text-3xl mb-3">✓</div>
                 <h2 className="text-lg font-bold text-white mb-1">You&apos;re all set!</h2>
                 <p className="text-sm text-base-muted mb-5">
-                  We&apos;ll notify {pendingPlatform.label} to deliver{" "}
-                  {smartlink.track_title} straight to your library the moment it drops.
+                  We&apos;ll notify {pendingPlatform.label} to deliver {smartlink.track_title}{" "}
+                  straight to your library the moment it drops.
                 </p>
                 <button
                   type="button"
