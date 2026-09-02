@@ -1,7 +1,6 @@
 import prisma from "../../../lib/prisma";
 import { getSessionFromRequest } from "../../../lib/auth";
 import { generateSlug } from "../../../lib/slug";
-import { ensurePlanCurrent, FREE_TIER_LINK_LIMIT } from "../../../lib/plans";
 
 // Fields that are always allowed, regardless of tier.
 const BASE_ALLOWED_FIELDS = [
@@ -15,12 +14,9 @@ const BASE_ALLOWED_FIELDS = [
   "url_spotify",
   "url_apple",
   "url_youtube",
-  "url_whatsapp",
-  "community_url",
-  "community_label",
 ];
 
-// Fields that are gated behind any paid (Basic/Pro/Lifetime) plan. If a free-tier
+// Fields that are gated behind the Premium ($16/mo) tier. If a free-tier
 // user submits any of these, they are silently sanitized and dropped —
 // never persisted, never partially honored.
 const PRO_ONLY_FIELDS = ["pixel_fb", "pixel_tiktok", "custom_domain"];
@@ -42,18 +38,6 @@ function isValidUrl(value) {
   }
 }
 
-const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
-const RESERVED_SLUGS = new Set([
-  "api",
-  "dashboard",
-  "login",
-  "register",
-  "logout",
-  "admin",
-  "_next",
-  "favicon.ico",
-]);
-
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     res.setHeader("Allow", ["POST"]);
@@ -67,25 +51,10 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: "You must be signed in to create a SmartLink." });
     }
 
-    let user = await prisma.user.findUnique({ where: { id: session.userId } });
+    const user = await prisma.user.findUnique({ where: { id: session.userId } });
 
     if (!user) {
       return res.status(401).json({ error: "You must be signed in to create a SmartLink." });
-    }
-
-    user = await ensurePlanCurrent(prisma, user);
-
-    // ---- Free tier link cap ---------------------------------------------
-    // Free stays genuinely free (no card required) but is capped so hosting
-    // cost per free user stays bounded — Premium revenue is what actually
-    // pays for infrastructure. Premium is unlimited.
-    if (!user.is_pro) {
-      const existingCount = await prisma.smartLink.count({ where: { user_id: user.id } });
-      if (existingCount >= FREE_TIER_LINK_LIMIT) {
-        return res.status(403).json({
-          error: `Free tier is limited to ${FREE_TIER_LINK_LIMIT} SmartLinks. Delete one, or upgrade to Premium for unlimited.`,
-        });
-      }
     }
 
     const payload = req.body || {};
@@ -135,32 +104,12 @@ export default async function handler(req, res) {
       url_spotify: sanitizeString(payload.url_spotify),
       url_apple: sanitizeString(payload.url_apple),
       url_youtube: sanitizeString(payload.url_youtube),
-      url_deezer: sanitizeString(payload.url_deezer),
-      url_tidal: sanitizeString(payload.url_tidal),
-      url_soundcloud: sanitizeString(payload.url_soundcloud),
-      url_pandora: sanitizeString(payload.url_pandora),
-      url_iheartradio: sanitizeString(payload.url_iheartradio),
-      url_whatsapp: sanitizeString(payload.url_whatsapp),
     };
 
     for (const [key, value] of Object.entries(platformUrls)) {
       if (!isValidUrl(value)) {
         return res.status(400).json({ error: `${key} must be a valid URL.` });
       }
-    }
-
-    // ---- Fan community CTA (optional, free tier) ------------------------
-    // A single artist-branded call to action ("Join the Nation") pointing
-    // wherever their real community lives — not tier-gated, since it's a
-    // growth lever every creator should be able to use from day one.
-    const community_url = sanitizeString(payload.community_url);
-    const community_label = sanitizeString(payload.community_label);
-
-    if (!isValidUrl(community_url)) {
-      return res.status(400).json({ error: "community_url must be a valid URL." });
-    }
-    if (community_label && community_label.length > 40) {
-      return res.status(400).json({ error: "Community CTA label must be 40 characters or fewer." });
     }
 
     const is_presave = Boolean(payload.is_presave) || release_date.getTime() > Date.now();
@@ -188,38 +137,7 @@ export default async function handler(req, res) {
       }
     }
 
-    // ---- Custom vanity slug (optional) ----------------------------------
-    // e.g. sample.fm/catch-the-feeling instead of a random string. Falls
-    // back to a random slug when left blank; rejected outright (not
-    // silently renamed) when it's invalid or already taken, so the artist
-    // always knows exactly what link they're getting.
-    const requestedSlug = sanitizeString(payload.custom_slug);
-    let slug;
-
-    if (requestedSlug) {
-      const normalizedSlug = requestedSlug.toLowerCase();
-
-      if (normalizedSlug.length < 3 || normalizedSlug.length > 60) {
-        return res.status(400).json({ error: "Custom link must be 3–60 characters long." });
-      }
-      if (!SLUG_PATTERN.test(normalizedSlug)) {
-        return res.status(400).json({
-          error: "Custom link can only contain lowercase letters, numbers, and single hyphens.",
-        });
-      }
-      if (RESERVED_SLUGS.has(normalizedSlug)) {
-        return res.status(400).json({ error: "That custom link is reserved. Please choose another." });
-      }
-
-      const existing = await prisma.smartLink.findUnique({ where: { slug: normalizedSlug } });
-      if (existing) {
-        return res.status(409).json({ error: "That custom link is already taken." });
-      }
-
-      slug = normalizedSlug;
-    } else {
-      slug = generateSlug(7);
-    }
+    const slug = generateSlug(7);
 
     const smartlink = await prisma.smartLink.create({
       data: {
@@ -232,8 +150,6 @@ export default async function handler(req, res) {
         artwork_urls: gallery.length > 0 ? gallery.join(",") : null,
         is_presave,
         ...platformUrls,
-        community_url,
-        community_label,
         pixel_fb,
         pixel_tiktok,
       },

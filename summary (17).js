@@ -1,6 +1,5 @@
 import prisma from "../../../lib/prisma";
 import { getSessionFromRequest } from "../../../lib/auth";
-import { ensurePlanCurrent } from "../../../lib/plans";
 
 // Aggregates click + pre-save data across every SmartLink owned by the
 // signed-in creator, for the Dashboard's Analytics Panel:
@@ -26,16 +25,11 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: "You must be signed in." });
     }
 
-    let user = await prisma.user.findUnique({ where: { id: session.userId } });
+    const user = await prisma.user.findUnique({ where: { id: session.userId } });
 
     if (!user) {
       return res.status(401).json({ error: "You must be signed in." });
     }
-
-    // Lazily downgrade if a monthly/yearly plan has lapsed since we last
-    // checked — there's no cron, so this is checked wherever tier gating
-    // actually matters.
-    user = await ensurePlanCurrent(prisma, user);
 
     const userLinks = await prisma.smartLink.findMany({
       where: { user_id: user.id },
@@ -110,7 +104,6 @@ export default async function handler(req, res) {
         ? rawPresaves.map((p) => ({
             id: p.id,
             fan_email: p.fan_email,
-            fan_phone: p.fan_phone,
             provider: p.provider,
             processed: p.processed,
             created_at: p.created_at,

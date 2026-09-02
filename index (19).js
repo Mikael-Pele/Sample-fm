@@ -1,22 +1,8 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
 import Head from "next/head";
-import SiteFooter from "../components/SiteFooter";
-import { extractCountryFromHeaders } from "../lib/geo";
-import { getRegionForCountry, REGION_PRICING } from "../lib/plans";
 
-export async function getServerSideProps({ req, query }) {
-  const headerCountry = extractCountryFromHeaders(req.headers);
-  const country =
-    headerCountry && headerCountry !== "UNKNOWN"
-      ? headerCountry
-      : (query.demo_country || "").toString().toUpperCase() || null;
-
-  return { props: { pricingRegion: getRegionForCountry(country) } };
-}
-
-export default function HomePage({ pricingRegion }) {
-  const price = REGION_PRICING[pricingRegion] || REGION_PRICING.global;
+export default function HomePage() {
   const router = useRouter();
   const [mode, setMode] = useState("register"); // "register" | "login"
   const [email, setEmail] = useState("");
@@ -83,18 +69,15 @@ export default function HomePage({ pricingRegion }) {
           <div className="grid grid-cols-2 gap-4 max-w-md text-sm">
             <div className="glass-card rounded-xl p-4">
               <div className="text-brand font-bold text-2xl mb-1">Free</div>
-              <div className="text-base-muted">Up to 3 SmartLinks, basic analytics</div>
+              <div className="text-base-muted">Unlimited SmartLinks, basic analytics</div>
             </div>
             <div className="glass-card rounded-xl p-4 border-brand/40">
-              <div className="text-brand-light font-bold text-2xl mb-1">${price.monthly}/mo</div>
+              <div className="text-brand-light font-bold text-2xl mb-1">$16/mo</div>
               <div className="text-base-muted">
-                Unlimited links, pixels, custom domains, no branding
+                Pixels, custom domains, no Sample.fm branding
               </div>
             </div>
           </div>
-          <p className="text-xs text-base-muted mt-3 max-w-md">
-            Or ${price.yearly}/yr on Premium — two months free.
-          </p>
         </div>
 
         <div className="glass-card rounded-xl2 p-8 shadow-glass">
@@ -124,7 +107,7 @@ export default function HomePage({ pricingRegion }) {
           </h2>
           <p className="text-base-muted text-sm mb-6">
             {mode === "register"
-              ? `Free forever, up to 3 SmartLinks. Upgrade any time for $${price.monthly}/mo.`
+              ? "Free forever. Upgrade any time for $16/mo."
               : "Sign in to manage your SmartLinks."}
           </p>
 
@@ -180,9 +163,8 @@ export default function HomePage({ pricingRegion }) {
         </div>
       </div>
 
-      <footer className="text-center text-base-muted text-xs pb-10 space-y-3">
-        <p>Sample.fm — SmartLinks &amp; pre-saves engineered for independent music creators.</p>
-        <SiteFooter />
+      <footer className="text-center text-base-muted text-xs pb-10">
+        Sample.fm — SmartLinks &amp; pre-saves engineered for independent music creators.
       </footer>
     </div>
   );

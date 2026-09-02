@@ -1,6 +1,5 @@
 import crypto from "crypto";
 import prisma from "../../lib/prisma";
-import { matchPlanByAmount, grantPremium } from "../../lib/plans";
 
 // Paystack requires the raw request body to validate the HMAC signature,
 // so we disable Next's default JSON body parsing for this route only.
@@ -9,6 +8,8 @@ export const config = {
     bodyParser: false,
   },
 };
+
+const PREMIUM_PLAN_AMOUNT_KOBO = 1600 * 100; // $16.00 expressed in the smallest currency unit style Paystack uses (kobo/cents)
 
 function readRawBody(req) {
   return new Promise((resolve, reject) => {
@@ -60,7 +61,7 @@ export default async function handler(req, res) {
     }
 
     const customerEmail = data && data.customer && data.customer.email;
-    const amountPaid = data && data.amount; // in pesewas (smallest unit of GHS)
+    const amountPaid = data && data.amount; // in kobo/cents
     const paystackReference = data && data.reference;
 
     if (!customerEmail) {
@@ -68,47 +69,41 @@ export default async function handler(req, res) {
       return res.status(200).json({ received: true, ignored: true, reason: "no_customer_email" });
     }
 
-    if (typeof amountPaid !== "number") {
-      console.warn("[/api/paystack-webhook] charge.success missing amount");
-      return res.status(200).json({ received: true, ignored: true, reason: "no_amount" });
-    }
-
-    // Map the amount actually charged back to Premium monthly or yearly. An
-    // amount that doesn't match anything we sell is ignored rather than
-    // granting access on a guess.
-    const matched = matchPlanByAmount(amountPaid);
-    if (!matched) {
+    // Guard against processing charges for amounts that don't correspond to
+    // the $16/mo Premium plan (e.g. accidental duplicate/other-product
+    // charges hitting the same webhook URL).
+    if (typeof amountPaid === "number" && amountPaid < PREMIUM_PLAN_AMOUNT_KOBO * 0.95) {
       console.warn(
-        `[/api/paystack-webhook] charge.success amount (${amountPaid}) didn't match any known plan, skipping`
+        `[/api/paystack-webhook] charge.success amount (${amountPaid}) below expected premium plan amount, skipping tier upgrade`
       );
       return res.status(200).json({ received: true, ignored: true, reason: "amount_mismatch" });
     }
 
-    const updatedUser = await grantPremium(prisma, {
-      email: customerEmail,
-      region: matched.region,
-      billing_interval: matched.billing_interval,
-    });
+    const normalizedEmail = customerEmail.trim().toLowerCase();
 
-    if (!updatedUser) {
-      console.warn(`[/api/paystack-webhook] charge.success for unknown user email: ${customerEmail}`);
+    const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+
+    if (!user) {
+      console.warn(
+        `[/api/paystack-webhook] charge.success for unknown user email: ${normalizedEmail}`
+      );
       return res.status(200).json({ received: true, ignored: true, reason: "user_not_found" });
     }
 
+    const updatedUser = await prisma.user.update({
+      where: { id: user.id },
+      data: { is_pro: true },
+    });
+
     console.log(
-      `[/api/paystack-webhook] SUCCESS: user ${updatedUser.email} upgraded to ${matched.plan} ` +
-        `(${matched.region} pricing, ${matched.billing_interval}). Paystack reference: ${
-          paystackReference || "n/a"
-        }`
+      `[/api/paystack-webhook] SUCCESS: user ${updatedUser.email} upgraded to Premium ($16/mo). ` +
+        `Paystack reference: ${paystackReference || "n/a"}`
     );
 
     return res.status(200).json({
       received: true,
       upgraded: true,
       user_id: updatedUser.id,
-      plan: updatedUser.plan,
-      region: updatedUser.pricing_region,
-      billing_interval: updatedUser.billing_interval,
       reference: paystackReference || null,
     });
   } catch (err) {
