@@ -7,11 +7,6 @@ const VALID_PLATFORMS = new Set([
   "spotify",
   "apple",
   "youtube",
-  "deezer",
-  "tidal",
-  "soundcloud",
-  "pandora",
-  "iheartradio",
   "presave",
   "footer_cta",
 ]);

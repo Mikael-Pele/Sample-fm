@@ -6,11 +6,6 @@ import {
   SpotifyIcon,
   AppleMusicIcon,
   YouTubeMusicIcon,
-  DeezerIcon,
-  TidalIcon,
-  SoundCloudIcon,
-  PandoraIcon,
-  IHeartRadioIcon,
   UploadIcon,
   LockIcon,
 } from "./PlatformIcons";
@@ -22,7 +17,6 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "";
 const EMPTY_FORM = {
   artist_name: "",
   track_title: "",
-  custom_slug: "",
   release_date: "",
   is_presave: false,
   url_audiomack: "",
@@ -30,11 +24,6 @@ const EMPTY_FORM = {
   url_spotify: "",
   url_apple: "",
   url_youtube: "",
-  url_deezer: "",
-  url_tidal: "",
-  url_soundcloud: "",
-  url_pandora: "",
-  url_iheartradio: "",
   pixel_fb: "",
   pixel_tiktok: "",
 };
@@ -45,11 +34,6 @@ const PLATFORM_FIELDS = [
   { key: "url_spotify", label: "Spotify", Icon: SpotifyIcon, ring: "focus-within:ring-spotify" },
   { key: "url_apple", label: "Apple Music", Icon: AppleMusicIcon, ring: "focus-within:ring-apple" },
   { key: "url_youtube", label: "YouTube Music", Icon: YouTubeMusicIcon, ring: "focus-within:ring-youtube" },
-  { key: "url_deezer", label: "Deezer", Icon: DeezerIcon, ring: "focus-within:ring-deezer" },
-  { key: "url_tidal", label: "Tidal", Icon: TidalIcon, ring: "focus-within:ring-tidal" },
-  { key: "url_soundcloud", label: "SoundCloud", Icon: SoundCloudIcon, ring: "focus-within:ring-soundcloud" },
-  { key: "url_pandora", label: "Pandora", Icon: PandoraIcon, ring: "focus-within:ring-pandora" },
-  { key: "url_iheartradio", label: "iHeartRadio", Icon: IHeartRadioIcon, ring: "focus-within:ring-iheartradio" },
 ];
 
 // Display metadata for the per-platform click breakdown (Premium). Keyed
@@ -60,11 +44,6 @@ const PLATFORM_META = {
   spotify: { label: "Spotify", Icon: SpotifyIcon, barClass: "bg-spotify" },
   apple: { label: "Apple Music", Icon: AppleMusicIcon, barClass: "bg-apple" },
   youtube: { label: "YouTube Music", Icon: YouTubeMusicIcon, barClass: "bg-youtube" },
-  deezer: { label: "Deezer", Icon: DeezerIcon, barClass: "bg-deezer" },
-  tidal: { label: "Tidal", Icon: TidalIcon, barClass: "bg-base-muted" },
-  soundcloud: { label: "SoundCloud", Icon: SoundCloudIcon, barClass: "bg-soundcloud" },
-  pandora: { label: "Pandora", Icon: PandoraIcon, barClass: "bg-pandora" },
-  iheartradio: { label: "iHeartRadio", Icon: IHeartRadioIcon, barClass: "bg-iheartradio" },
   presave: { label: "Pre-Save Modal", Icon: UploadIcon, barClass: "bg-brand" },
   footer_cta: { label: "\"Powered by\" Footer", Icon: UploadIcon, barClass: "bg-base-muted" },
 };
@@ -172,20 +151,6 @@ export default function Dashboard({ initialUser }) {
 
   function handleFieldChange(e) {
     const { name, value, type, checked } = e.target;
-
-    if (name === "custom_slug") {
-      // Sanitize as-you-type: lowercase, spaces/underscores become hyphens,
-      // strip anything that isn't a-z, 0-9, or a hyphen — mirrors how the
-      // link will actually look, e.g. "Catch The Feeling" -> "catch-the-feeling".
-      const sanitized = value
-        .toLowerCase()
-        .replace(/[\s_]+/g, "-")
-        .replace(/[^a-z0-9-]/g, "")
-        .replace(/-+/g, "-");
-      setForm((prev) => ({ ...prev, custom_slug: sanitized }));
-      return;
-    }
-
     setForm((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
@@ -763,30 +728,6 @@ export default function Dashboard({ initialUser }) {
                   className="w-full bg-base-bg border border-base-border rounded-lg px-3.5 py-2.5 text-sm outline-none focus:border-brand transition"
                 />
               </div>
-            </div>
-
-            {/* ---------------- Custom Link ---------------- */}
-            <div>
-              <label className="block text-xs font-semibold text-base-muted mb-1.5">
-                Custom Link (optional — like ditto.fm/catch-the-feeling)
-              </label>
-              <div className="flex items-center bg-base-bg border border-base-border rounded-lg px-3.5 py-2.5 focus-within:border-brand transition">
-                <span className="text-sm text-base-muted whitespace-nowrap">
-                  {(APP_URL || "sample.fm").replace(/^https?:\/\//, "")}/
-                </span>
-                <input
-                  type="text"
-                  name="custom_slug"
-                  value={form.custom_slug}
-                  onChange={handleFieldChange}
-                  placeholder="catch-the-feeling"
-                  maxLength={60}
-                  className="flex-1 min-w-0 bg-transparent text-sm text-white outline-none placeholder:text-base-muted/60"
-                />
-              </div>
-              <p className="text-xs text-base-muted mt-1">
-                Leave blank for a random link. Lowercase letters, numbers, and hyphens only.
-              </p>
             </div>
 
             {/* ---------------- Cover Art Upload ---------------- */}

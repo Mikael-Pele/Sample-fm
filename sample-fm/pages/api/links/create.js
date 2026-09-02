@@ -38,18 +38,6 @@ function isValidUrl(value) {
   }
 }
 
-const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
-const RESERVED_SLUGS = new Set([
-  "api",
-  "dashboard",
-  "login",
-  "register",
-  "logout",
-  "admin",
-  "_next",
-  "favicon.ico",
-]);
-
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     res.setHeader("Allow", ["POST"]);
@@ -116,11 +104,6 @@ export default async function handler(req, res) {
       url_spotify: sanitizeString(payload.url_spotify),
       url_apple: sanitizeString(payload.url_apple),
       url_youtube: sanitizeString(payload.url_youtube),
-      url_deezer: sanitizeString(payload.url_deezer),
-      url_tidal: sanitizeString(payload.url_tidal),
-      url_soundcloud: sanitizeString(payload.url_soundcloud),
-      url_pandora: sanitizeString(payload.url_pandora),
-      url_iheartradio: sanitizeString(payload.url_iheartradio),
     };
 
     for (const [key, value] of Object.entries(platformUrls)) {
@@ -154,38 +137,7 @@ export default async function handler(req, res) {
       }
     }
 
-    // ---- Custom vanity slug (optional) ----------------------------------
-    // e.g. sample.fm/catch-the-feeling instead of a random string. Falls
-    // back to a random slug when left blank; rejected outright (not
-    // silently renamed) when it's invalid or already taken, so the artist
-    // always knows exactly what link they're getting.
-    const requestedSlug = sanitizeString(payload.custom_slug);
-    let slug;
-
-    if (requestedSlug) {
-      const normalizedSlug = requestedSlug.toLowerCase();
-
-      if (normalizedSlug.length < 3 || normalizedSlug.length > 60) {
-        return res.status(400).json({ error: "Custom link must be 3–60 characters long." });
-      }
-      if (!SLUG_PATTERN.test(normalizedSlug)) {
-        return res.status(400).json({
-          error: "Custom link can only contain lowercase letters, numbers, and single hyphens.",
-        });
-      }
-      if (RESERVED_SLUGS.has(normalizedSlug)) {
-        return res.status(400).json({ error: "That custom link is reserved. Please choose another." });
-      }
-
-      const existing = await prisma.smartLink.findUnique({ where: { slug: normalizedSlug } });
-      if (existing) {
-        return res.status(409).json({ error: "That custom link is already taken." });
-      }
-
-      slug = normalizedSlug;
-    } else {
-      slug = generateSlug(7);
-    }
+    const slug = generateSlug(7);
 
     const smartlink = await prisma.smartLink.create({
       data: {

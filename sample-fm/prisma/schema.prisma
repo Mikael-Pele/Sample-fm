@@ -39,11 +39,6 @@ model SmartLink {
   url_spotify    String?
   url_apple      String?
   url_youtube    String?
-  url_deezer      String?
-  url_tidal       String?
-  url_soundcloud  String?
-  url_pandora     String?
-  url_iheartradio String?
 
   // Premium-only fields — sanitized/dropped server-side for free-tier users
   pixel_fb       String?
