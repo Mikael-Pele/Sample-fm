@@ -11,9 +11,14 @@ import {
   SoundCloudIcon,
   PandoraIcon,
   IHeartRadioIcon,
+  WhatsAppIcon,
+  CommunityIcon,
   UploadIcon,
   LockIcon,
 } from "./PlatformIcons";
+import SiteFooter from "./SiteFooter";
+
+const IS_PRODUCTION = process.env.NODE_ENV === "production";
 
 const PAYSTACK_PLAN_URL =
   process.env.NEXT_PUBLIC_PAYSTACK_PLAN_URL || "https://paystack.com/pay/sample-fm-premium";
@@ -35,6 +40,9 @@ const EMPTY_FORM = {
   url_soundcloud: "",
   url_pandora: "",
   url_iheartradio: "",
+  url_whatsapp: "",
+  community_url: "",
+  community_label: "",
   pixel_fb: "",
   pixel_tiktok: "",
 };
@@ -50,6 +58,7 @@ const PLATFORM_FIELDS = [
   { key: "url_soundcloud", label: "SoundCloud", Icon: SoundCloudIcon, ring: "focus-within:ring-soundcloud" },
   { key: "url_pandora", label: "Pandora", Icon: PandoraIcon, ring: "focus-within:ring-pandora" },
   { key: "url_iheartradio", label: "iHeartRadio", Icon: IHeartRadioIcon, ring: "focus-within:ring-iheartradio" },
+  { key: "url_whatsapp", label: "WhatsApp Channel", Icon: WhatsAppIcon, ring: "focus-within:ring-whatsapp" },
 ];
 
 // Display metadata for the per-platform click breakdown (Premium). Keyed
@@ -65,6 +74,8 @@ const PLATFORM_META = {
   soundcloud: { label: "SoundCloud", Icon: SoundCloudIcon, barClass: "bg-soundcloud" },
   pandora: { label: "Pandora", Icon: PandoraIcon, barClass: "bg-pandora" },
   iheartradio: { label: "iHeartRadio", Icon: IHeartRadioIcon, barClass: "bg-iheartradio" },
+  whatsapp: { label: "WhatsApp Channel", Icon: WhatsAppIcon, barClass: "bg-whatsapp" },
+  community_cta: { label: "Fan Community CTA", Icon: CommunityIcon, barClass: "bg-brand" },
   presave: { label: "Pre-Save Modal", Icon: UploadIcon, barClass: "bg-brand" },
   footer_cta: { label: "\"Powered by\" Footer", Icon: UploadIcon, barClass: "bg-base-muted" },
 };
@@ -146,6 +157,7 @@ export default function Dashboard({ initialUser }) {
   const [customDomainInput, setCustomDomainInput] = useState(user?.custom_domain || "");
   const [domainSaving, setDomainSaving] = useState(false);
   const [domainError, setDomainError] = useState("");
+  const [deletingId, setDeletingId] = useState(null);
 
   const isPro = Boolean(user?.is_pro);
 
@@ -339,6 +351,29 @@ export default function Dashboard({ initialUser }) {
     }
   }
 
+  async function handleDeleteLink(link) {
+    const confirmed = window.confirm(
+      `Delete "${link.track_title}" by ${link.artist_name}? This permanently removes its analytics and pre-saves too. This can't be undone.`
+    );
+    if (!confirmed) return;
+
+    setDeletingId(link.id);
+    try {
+      const res = await fetch(`/api/links/${link.id}`, { method: "DELETE" });
+      if (res.ok) {
+        setLinks((prev) => prev.filter((l) => l.id !== link.id));
+        loadAnalytics();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        window.alert(data.error || "Could not delete this SmartLink.");
+      }
+    } catch (err) {
+      window.alert("Network error while deleting this SmartLink.");
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
   async function handleSaveDomain(e) {
     e.preventDefault();
     setDomainError("");
@@ -364,11 +399,12 @@ export default function Dashboard({ initialUser }) {
 
   function exportEmailsCsv() {
     if (!analytics || !analytics.presaves || analytics.presaves.length === 0) return;
-    const header = "fan_email,track_title,artist_name,provider,status,collected_at\n";
+    const header = "fan_email,fan_phone,track_title,artist_name,provider,status,collected_at\n";
     const rows = analytics.presaves
       .map((p) =>
         [
           p.fan_email,
+          p.fan_phone || "",
           `"${p.track_title.replace(/"/g, '""')}"`,
           `"${p.artist_name.replace(/"/g, '""')}"`,
           p.provider,
@@ -455,15 +491,17 @@ export default function Dashboard({ initialUser }) {
                   Upgrade to Premium — $16/mo
                 </a>
               )}
-              <button
-                type="button"
-                onClick={handleSimulateUpgrade}
-                className="text-xs text-base-muted hover:text-brand-light border border-dashed border-base-border hover:border-brand-light rounded-lg px-4 py-2 transition"
-              >
-                {isPro
-                  ? "[Revert to Free — dev testing]"
-                  : "[Simulate Paystack $16 Subscription Success]"}
-              </button>
+              {!IS_PRODUCTION && (
+                <button
+                  type="button"
+                  onClick={handleSimulateUpgrade}
+                  className="text-xs text-base-muted hover:text-brand-light border border-dashed border-base-border hover:border-brand-light rounded-lg px-4 py-2 transition"
+                >
+                  {isPro
+                    ? "[Revert to Free — dev testing]"
+                    : "[Simulate Paystack $16 Subscription Success]"}
+                </button>
+              )}
             </div>
           </div>
 
@@ -524,7 +562,7 @@ export default function Dashboard({ initialUser }) {
                   onClick={exportEmailsCsv}
                   className="text-xs font-semibold text-brand-light hover:text-brand transition whitespace-nowrap"
                 >
-                  Export CSV
+                  Export CSV (email + phone)
                 </button>
               )}
             </div>
@@ -536,6 +574,7 @@ export default function Dashboard({ initialUser }) {
                     <thead>
                       <tr className="text-left text-base-muted text-xs uppercase tracking-wide">
                         <th className="px-2 py-2 font-semibold">Fan Email</th>
+                        <th className="px-2 py-2 font-semibold">Phone</th>
                         <th className="px-2 py-2 font-semibold">Track</th>
                         <th className="px-2 py-2 font-semibold">Status</th>
                       </tr>
@@ -544,6 +583,7 @@ export default function Dashboard({ initialUser }) {
                       {[1, 2, 3].map((i) => (
                         <tr key={i} className="border-t border-base-border/60">
                           <td className="px-2 py-2.5">fan{i}@example.com</td>
+                          <td className="px-2 py-2.5">+233 24 000 000{i}</td>
                           <td className="px-2 py-2.5 text-base-muted">Sample Track {i}</td>
                           <td className="px-2 py-2.5 text-emerald-400">Queued</td>
                         </tr>
@@ -578,6 +618,7 @@ export default function Dashboard({ initialUser }) {
                     <thead>
                       <tr className="text-left text-base-muted text-xs uppercase tracking-wide">
                         <th className="px-4 sm:px-5 py-2 font-semibold">Fan Email</th>
+                        <th className="px-4 sm:px-5 py-2 font-semibold">Phone</th>
                         <th className="px-4 sm:px-5 py-2 font-semibold">Track</th>
                         <th className="px-4 sm:px-5 py-2 font-semibold">Provider</th>
                         <th className="px-4 sm:px-5 py-2 font-semibold">Status</th>
@@ -587,6 +628,9 @@ export default function Dashboard({ initialUser }) {
                       {analytics.presaves.map((p) => (
                         <tr key={p.id} className="border-t border-base-border/60">
                           <td className="px-4 sm:px-5 py-2.5 whitespace-nowrap">{p.fan_email}</td>
+                          <td className="px-4 sm:px-5 py-2.5 whitespace-nowrap text-base-muted">
+                            {p.fan_phone || "—"}
+                          </td>
                           <td className="px-4 sm:px-5 py-2.5 text-base-muted whitespace-nowrap">
                             {p.artist_name} — {p.track_title}
                           </td>
@@ -933,6 +977,54 @@ export default function Dashboard({ initialUser }) {
               </div>
             </div>
 
+            {/* ---------------- Fan Community CTA ---------------- */}
+            <div>
+              <h3 className="text-sm font-bold mb-1 text-base-muted uppercase tracking-wide">
+                Fan Community CTA (optional)
+              </h3>
+              <p className="text-xs text-base-muted mb-3">
+                One branded button pointing fans to your community — Instagram, a WhatsApp
+                Channel, Discord, wherever they belong. Give it your own fandom name, like
+                &quot;Join the Nation.&quot;
+              </p>
+              <div className="grid sm:grid-cols-2 gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-14 h-14 rounded-xl bg-base-bg border border-base-border flex items-center justify-center shrink-0">
+                    <CommunityIcon size={22} className="text-base-muted" />
+                  </div>
+                  <div className="min-w-0 flex-1 bg-base-bg border border-base-border rounded-lg px-3.5 py-2.5 transition focus-within:border-brand focus-within:ring-1 focus-within:ring-brand">
+                    <label htmlFor="community_url" className="block text-[11px] font-semibold text-base-muted mb-0.5">
+                      Community Link
+                    </label>
+                    <input
+                      id="community_url"
+                      type="url"
+                      name="community_url"
+                      value={form.community_url}
+                      onChange={handleFieldChange}
+                      placeholder="https://instagram.com/youraccount"
+                      className="w-full bg-transparent text-sm text-white outline-none placeholder:text-base-muted/60"
+                    />
+                  </div>
+                </div>
+                <div className="min-w-0 bg-base-bg border border-base-border rounded-lg px-3.5 py-2.5 transition focus-within:border-brand focus-within:ring-1 focus-within:ring-brand">
+                  <label htmlFor="community_label" className="block text-[11px] font-semibold text-base-muted mb-0.5">
+                    Button Text (optional)
+                  </label>
+                  <input
+                    id="community_label"
+                    type="text"
+                    name="community_label"
+                    value={form.community_label}
+                    onChange={handleFieldChange}
+                    maxLength={40}
+                    placeholder="Join the Nation"
+                    className="w-full bg-transparent text-sm text-white outline-none placeholder:text-base-muted/60"
+                  />
+                </div>
+              </div>
+            </div>
+
             {/* ---------------- Strict 2-Tier Product Gate ---------------- */}
             <div className="relative">
               <h3 className="text-sm font-bold mb-3 text-base-muted uppercase tracking-wide">
@@ -1021,40 +1113,57 @@ export default function Dashboard({ initialUser }) {
                 </p>
               )}
               {links.map((link) => (
-                <a
+                <div
                   key={link.id}
-                  href={`/${link.slug}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block bg-base-bg border border-base-border rounded-lg p-3.5 hover:border-brand transition"
+                  className="relative bg-base-bg border border-base-border rounded-lg p-3.5 hover:border-brand transition"
                 >
-                  <div className="flex items-center gap-3 min-w-0">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={link.artwork_url}
-                      alt={link.track_title}
-                      className="w-12 h-12 rounded-md object-cover bg-base-card shrink-0"
-                    />
-                    <div className="min-w-0">
-                      <div className="font-semibold text-sm truncate">{link.track_title}</div>
-                      <div className="text-xs text-base-muted truncate">{link.artist_name}</div>
-                      <div className="text-xs text-brand-light truncate">
-                        {APP_URL || "sample.fm"}/{link.slug}
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteLink(link)}
+                    disabled={deletingId === link.id}
+                    aria-label="Delete SmartLink"
+                    className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center rounded-full bg-black/40 text-base-muted hover:text-white hover:bg-red-600 transition disabled:opacity-50"
+                  >
+                    {deletingId === link.id ? "…" : "✕"}
+                  </button>
+                  <a
+                    href={`/${link.slug}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block pr-6"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={link.artwork_url}
+                        alt={link.track_title}
+                        className="w-12 h-12 rounded-md object-cover bg-base-card shrink-0"
+                      />
+                      <div className="min-w-0">
+                        <div className="font-semibold text-sm truncate">{link.track_title}</div>
+                        <div className="text-xs text-base-muted truncate">{link.artist_name}</div>
+                        <div className="text-xs text-brand-light truncate">
+                          {APP_URL || "sample.fm"}/{link.slug}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-3 mt-2 text-xs text-base-muted flex-wrap">
-                    <span>{link._count?.analytics ?? 0} clicks</span>
-                    <span>{link._count?.presaves ?? 0} pre-saves</span>
-                    {link.is_presave && (
-                      <span className="text-amber-400 font-semibold">PRE-SAVE</span>
-                    )}
-                  </div>
-                </a>
+                    <div className="flex items-center gap-3 mt-2 text-xs text-base-muted flex-wrap">
+                      <span>{link._count?.analytics ?? 0} clicks</span>
+                      <span>{link._count?.presaves ?? 0} pre-saves</span>
+                      {link.is_presave && (
+                        <span className="text-amber-400 font-semibold">PRE-SAVE</span>
+                      )}
+                    </div>
+                  </a>
+                </div>
               ))}
             </div>
           </div>
         </section>
+
+        <footer className="pt-4 pb-2">
+          <SiteFooter />
+        </footer>
       </main>
     </div>
   );

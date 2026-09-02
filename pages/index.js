@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
 import Head from "next/head";
+import SiteFooter from "../components/SiteFooter";
 
 export default function HomePage() {
   const router = useRouter();
@@ -163,8 +164,9 @@ export default function HomePage() {
         </div>
       </div>
 
-      <footer className="text-center text-base-muted text-xs pb-10">
-        Sample.fm — SmartLinks &amp; pre-saves engineered for independent music creators.
+      <footer className="text-center text-base-muted text-xs pb-10 space-y-3">
+        <p>Sample.fm — SmartLinks &amp; pre-saves engineered for independent music creators.</p>
+        <SiteFooter />
       </footer>
     </div>
   );

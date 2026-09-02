@@ -11,6 +11,9 @@ import {
   SoundCloudIcon,
   PandoraIcon,
   IHeartRadioIcon,
+  WhatsAppIcon,
+  CommunityIcon,
+  ChevronIcon,
   SampleFmMark,
 } from "./PlatformIcons";
 
@@ -84,6 +87,7 @@ export default function SmartLinkPage({ smartlink, isAfricanFan, fanCountry, own
   const [presaveModalOpen, setPresaveModalOpen] = useState(false);
   const [pendingPlatform, setPendingPlatform] = useState(null);
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [submitted, setSubmitted] = useState(false);
@@ -101,97 +105,22 @@ export default function SmartLinkPage({ smartlink, isAfricanFan, fanCountry, own
     smartlink.is_presave || new Date(smartlink.release_date).getTime() > Date.now();
 
   const platforms = useMemo(() => {
+    // Each row is visually identical — a neutral card, the platform's own
+    // (official) logo, its name, and a plain chevron. The brand color lives
+    // only in the small logo itself, the way Feature.fm/Ditto.fm do it,
+    // rather than tinting the whole row/button per platform.
     const all = [
-      {
-        key: "audiomack",
-        label: "Audiomack",
-        url: smartlink.url_audiomack,
-        Icon: AudiomackIcon,
-        accentBorder: "hover:border-audiomack",
-        buttonBg: "bg-audiomack",
-        glow: "rgba(255, 130, 0, 0.45)",
-      },
-      {
-        key: "boomplay",
-        label: "Boomplay",
-        url: smartlink.url_boomplay,
-        Icon: BoomplayIcon,
-        accentBorder: "hover:border-boomplay",
-        buttonBg: "bg-boomplay",
-        glow: "rgba(0, 229, 212, 0.45)",
-      },
-      {
-        key: "spotify",
-        label: "Spotify",
-        url: smartlink.url_spotify,
-        Icon: SpotifyIcon,
-        accentBorder: "hover:border-spotify",
-        buttonBg: "bg-spotify",
-        glow: "rgba(29, 185, 84, 0.45)",
-      },
-      {
-        key: "apple",
-        label: "Apple Music",
-        url: smartlink.url_apple,
-        Icon: AppleMusicIcon,
-        accentBorder: "hover:border-apple",
-        buttonBg: "bg-apple",
-        glow: "rgba(250, 36, 60, 0.45)",
-      },
-      {
-        key: "youtube",
-        label: "YouTube Music",
-        url: smartlink.url_youtube,
-        Icon: YouTubeMusicIcon,
-        accentBorder: "hover:border-youtube",
-        buttonBg: "bg-youtube",
-        glow: "rgba(255, 0, 0, 0.45)",
-      },
-      {
-        key: "deezer",
-        label: "Deezer",
-        url: smartlink.url_deezer,
-        Icon: DeezerIcon,
-        accentBorder: "hover:border-deezer",
-        buttonBg: "bg-deezer",
-        glow: "rgba(254, 170, 45, 0.45)",
-      },
-      {
-        key: "tidal",
-        label: "Tidal",
-        url: smartlink.url_tidal,
-        Icon: TidalIcon,
-        accentBorder: "hover:border-tidal",
-        buttonBg: "bg-tidal text-base-bg",
-        glow: "rgba(255, 255, 255, 0.35)",
-      },
-      {
-        key: "soundcloud",
-        label: "SoundCloud",
-        url: smartlink.url_soundcloud,
-        Icon: SoundCloudIcon,
-        accentBorder: "hover:border-soundcloud",
-        buttonBg: "bg-soundcloud",
-        glow: "rgba(255, 51, 0, 0.45)",
-      },
-      {
-        key: "pandora",
-        label: "Pandora",
-        url: smartlink.url_pandora,
-        Icon: PandoraIcon,
-        accentBorder: "hover:border-pandora",
-        buttonBg: "bg-pandora",
-        glow: "rgba(34, 64, 153, 0.45)",
-      },
-      {
-        key: "iheartradio",
-        label: "iHeartRadio",
-        url: smartlink.url_iheartradio,
-        Icon: IHeartRadioIcon,
-        accentBorder: "hover:border-iheartradio",
-        buttonBg: "bg-iheartradio",
-        glow: "rgba(198, 0, 43, 0.45)",
-      },
+      { key: "audiomack", label: "Audiomack", url: smartlink.url_audiomack, Icon: AudiomackIcon },
+      { key: "boomplay", label: "Boomplay", url: smartlink.url_boomplay, Icon: BoomplayIcon },
+      { key: "spotify", label: "Spotify", url: smartlink.url_spotify, Icon: SpotifyIcon },
+      { key: "apple", label: "Apple Music", url: smartlink.url_apple, Icon: AppleMusicIcon },
+      { key: "youtube", label: "YouTube Music", url: smartlink.url_youtube, Icon: YouTubeMusicIcon },
+      { key: "deezer", label: "Deezer", url: smartlink.url_deezer, Icon: DeezerIcon },
+      { key: "tidal", label: "Tidal", url: smartlink.url_tidal, Icon: TidalIcon },
+      { key: "soundcloud", label: "SoundCloud", url: smartlink.url_soundcloud, Icon: SoundCloudIcon },
+      { key: "pandora", label: "Pandora", url: smartlink.url_pandora, Icon: PandoraIcon },
+      { key: "iheartradio", label: "iHeartRadio", url: smartlink.url_iheartradio, Icon: IHeartRadioIcon },
+      { key: "whatsapp", label: "WhatsApp Channel", url: smartlink.url_whatsapp, Icon: WhatsAppIcon },
     ].filter((p) => Boolean(p.url));
 
     if (!isAfricanFan) return all;
@@ -253,6 +182,7 @@ export default function SmartLinkPage({ smartlink, isAfricanFan, fanCountry, own
         body: JSON.stringify({
           slug: smartlink.slug,
           fan_email: email,
+          fan_phone: phone,
           provider: pendingPlatform.key,
         }),
       });
@@ -277,6 +207,7 @@ export default function SmartLinkPage({ smartlink, isAfricanFan, fanCountry, own
     setPresaveModalOpen(false);
     setPendingPlatform(null);
     setEmail("");
+    setPhone("");
     setSubmitError("");
     setSubmitted(false);
   }
@@ -350,24 +281,22 @@ export default function SmartLinkPage({ smartlink, isAfricanFan, fanCountry, own
           )}
         </div>
 
-        <div className="space-y-2.5">
+        <div className="space-y-2">
           {platforms.map((platform) => (
             <button
               key={platform.key}
               type="button"
               onClick={() => handlePlatformClick(platform)}
-              style={{ "--glow-color": platform.glow }}
-              className={`glow-on-hover w-full flex items-center gap-3 bg-base-bg border border-base-border rounded-xl px-3.5 sm:px-4 py-3 ${platform.accentBorder}`}
+              className="w-full flex items-center gap-3 bg-white/[0.03] border border-base-border hover:border-white/25 hover:bg-white/[0.06] rounded-xl px-3.5 sm:px-4 py-3 transition-colors"
             >
               <platform.Icon />
               <span className="flex-1 min-w-0 text-left text-sm font-semibold text-white truncate">
                 {platform.label}
               </span>
-              <span
-                className={`text-xs font-bold uppercase tracking-wide px-3 py-1.5 rounded-lg text-base-bg shrink-0 ${platform.buttonBg}`}
-              >
+              <span className="text-xs font-medium text-base-muted shrink-0">
                 {isPresaveMode ? "Pre-Save" : "Play"}
               </span>
+              <ChevronIcon className="text-base-muted shrink-0" size={16} />
             </button>
           ))}
 
@@ -377,6 +306,19 @@ export default function SmartLinkPage({ smartlink, isAfricanFan, fanCountry, own
             </p>
           )}
         </div>
+
+        {smartlink.community_url && (
+          <a
+            href={smartlink.community_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => trackClick("community_cta")}
+            className="mt-4 w-full flex items-center justify-center gap-2 border border-base-border hover:border-brand text-white font-semibold text-sm rounded-xl px-4 py-3 transition-colors"
+          >
+            <CommunityIcon size={17} />
+            {smartlink.community_label || `Join ${smartlink.artist_name}'s community`}
+          </a>
+        )}
 
         {!ownerIsPro && (
           <a
@@ -421,11 +363,24 @@ export default function SmartLinkPage({ smartlink, isAfricanFan, fanCountry, own
                     placeholder="you@example.com"
                     className="w-full bg-base-bg border border-base-border rounded-lg px-3.5 py-2.5 text-sm text-white outline-none focus:border-brand transition"
                   />
+                  <div>
+                    <input
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="+233 24 000 0000 (optional)"
+                      className="w-full bg-base-bg border border-base-border rounded-lg px-3.5 py-2.5 text-sm text-white outline-none focus:border-brand transition"
+                    />
+                    <p className="text-xs text-base-muted mt-1">
+                      Optional — so {smartlink.artist_name} can add you to their WhatsApp
+                      fan updates.
+                    </p>
+                  </div>
                   {submitError && <p className="text-sm text-red-400 break-words">{submitError}</p>}
                   <button
                     type="submit"
                     disabled={submitting}
-                    className={`w-full text-base-bg font-bold rounded-lg py-2.5 text-sm transition disabled:opacity-60 ${pendingPlatform.buttonBg}`}
+                    className="w-full bg-brand hover:bg-brand-dark text-base-bg font-bold rounded-lg py-2.5 text-sm transition disabled:opacity-60"
                   >
                     {submitting ? "Submitting…" : "Confirm Pre-Save"}
                   </button>

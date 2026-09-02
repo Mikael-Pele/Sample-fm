@@ -13,6 +13,14 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
+  // Hard production kill-switch. Without this, ANY signed-in user could hit
+  // this endpoint directly (bypassing the UI entirely) and grant themselves
+  // Premium for free. Set ALLOW_DEV_UPGRADE=true in a non-production
+  // environment (e.g. a Vercel preview deployment) if you need this for QA.
+  if (process.env.NODE_ENV === "production" && process.env.ALLOW_DEV_UPGRADE !== "true") {
+    return res.status(404).json({ error: "Not found." });
+  }
+
   try {
     const session = getSessionFromRequest(req);
 

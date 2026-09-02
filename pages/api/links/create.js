@@ -14,6 +14,9 @@ const BASE_ALLOWED_FIELDS = [
   "url_spotify",
   "url_apple",
   "url_youtube",
+  "url_whatsapp",
+  "community_url",
+  "community_label",
 ];
 
 // Fields that are gated behind the Premium ($16/mo) tier. If a free-tier
@@ -121,12 +124,27 @@ export default async function handler(req, res) {
       url_soundcloud: sanitizeString(payload.url_soundcloud),
       url_pandora: sanitizeString(payload.url_pandora),
       url_iheartradio: sanitizeString(payload.url_iheartradio),
+      url_whatsapp: sanitizeString(payload.url_whatsapp),
     };
 
     for (const [key, value] of Object.entries(platformUrls)) {
       if (!isValidUrl(value)) {
         return res.status(400).json({ error: `${key} must be a valid URL.` });
       }
+    }
+
+    // ---- Fan community CTA (optional, free tier) ------------------------
+    // A single artist-branded call to action ("Join the Nation") pointing
+    // wherever their real community lives — not tier-gated, since it's a
+    // growth lever every creator should be able to use from day one.
+    const community_url = sanitizeString(payload.community_url);
+    const community_label = sanitizeString(payload.community_label);
+
+    if (!isValidUrl(community_url)) {
+      return res.status(400).json({ error: "community_url must be a valid URL." });
+    }
+    if (community_label && community_label.length > 40) {
+      return res.status(400).json({ error: "Community CTA label must be 40 characters or fewer." });
     }
 
     const is_presave = Boolean(payload.is_presave) || release_date.getTime() > Date.now();
@@ -198,6 +216,8 @@ export default async function handler(req, res) {
         artwork_urls: gallery.length > 0 ? gallery.join(",") : null,
         is_presave,
         ...platformUrls,
+        community_url,
+        community_label,
         pixel_fb,
         pixel_tiktok,
       },

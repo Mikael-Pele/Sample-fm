@@ -44,6 +44,13 @@ model SmartLink {
   url_soundcloud  String?
   url_pandora     String?
   url_iheartradio String?
+  url_whatsapp    String? // WhatsApp Channel link, e.g. https://whatsapp.com/channel/xxxx
+
+  // Customizable "join the fanbase" CTA — a single, artist-branded call to
+  // action (e.g. "Join the Nation") pointing wherever their community
+  // actually lives (Instagram, a WhatsApp Channel, a Discord, etc).
+  community_url   String?
+  community_label String?
 
   // Premium-only fields — sanitized/dropped server-side for free-tier users
   pixel_fb       String?
@@ -75,10 +82,22 @@ model Presave {
   link_id    String
   link       SmartLink @relation(fields: [link_id], references: [id], onDelete: Cascade)
   fan_email  String
+  fan_phone  String? // optional — lets creators build WhatsApp/SMS fanbases, not just email lists
   provider   String
   processed  Boolean   @default(false)
   created_at DateTime  @default(now())
 
   @@map("presaves")
   @@index([link_id])
+}
+
+model SupportReport {
+  id         String   @id @default(uuid())
+  user_id    String?
+  email      String?
+  message    String
+  page_url   String?
+  created_at DateTime @default(now())
+
+  @@map("support_reports")
 }

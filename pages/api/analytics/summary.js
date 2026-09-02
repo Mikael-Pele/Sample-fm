@@ -104,6 +104,7 @@ export default async function handler(req, res) {
         ? rawPresaves.map((p) => ({
             id: p.id,
             fan_email: p.fan_email,
+            fan_phone: p.fan_phone,
             provider: p.provider,
             processed: p.processed,
             created_at: p.created_at,

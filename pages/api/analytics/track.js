@@ -12,6 +12,8 @@ const VALID_PLATFORMS = new Set([
   "soundcloud",
   "pandora",
   "iheartradio",
+  "whatsapp",
+  "community_cta",
   "presave",
   "footer_cta",
 ]);
