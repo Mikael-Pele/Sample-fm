@@ -1,0 +1,51 @@
+# Postgres connection string (Neon, Supabase, Railway, RDS, etc.)
+DATABASE_URL="postgresql://user:password@host:5432/samplefm?schema=public"
+
+# JWT signing secret for auth cookies
+JWT_SECRET="replace-with-a-long-random-string"
+
+# Base URL of the deployed app (used to build SmartLink share URLs)
+NEXT_PUBLIC_APP_URL="https://sample.fm"
+
+# Paystack
+# 1. In your Paystack dashboard: Settings > API Keys & Webhooks — copy the
+#    "Secret Key" here (starts with sk_test_ or sk_live_). This one key is
+#    all Paystack setup needs now — it's used server-side to (a) start a
+#    checkout for whichever plan a user picks (see
+#    pages/api/billing/initialize.js), and (b) verify that webhook events
+#    genuinely came from Paystack (HMAC signature check). Never expose it in
+#    client code. There are no Payment Pages to create by hand anymore —
+#    checkout is generated automatically, in Ghana Cedis (this account is
+#    Ghana-registered — a standard account can't charge in USD without
+#    separately requesting "international payments" access), for whatever
+#    amount is set in lib/plans.js (PLAN_PRICES_GHS). The site itself always
+#    DISPLAYS the price in dollars.
+PAYSTACK_SECRET_KEY="sk_live_or_test_xxxxxxxxxxxxxxxxxxxxx"
+
+# 2. In the same dashboard section, set the webhook URL to:
+#    https://yourdomain.com/api/paystack-webhook
+#    Paystack calls this automatically on every successful payment — it's
+#    what actually grants Premium access (the /billing/callback page also
+#    confirms the payment for immediate UI feedback, but the webhook is the
+#    reliable one in case someone closes the tab too soon).
+
+# Dev-only: set to "true" on a NON-production deployment (e.g. a Vercel
+# preview) to allow the free "Simulate Paystack Success" testing button.
+# Leave unset in production — it is blocked automatically either way.
+ALLOW_DEV_UPGRADE="false"
+
+# Supabase Storage (cover art uploads) — Settings > API in your Supabase project
+SUPABASE_URL="https://xxxxxxxxxxxxx.supabase.co"
+SUPABASE_ANON_KEY="sb_publishable_xxxxxxxxxxxxxxxxxxxxxxxx"
+
+# "Report a problem" emails — delivered privately to CONTACT_EMAIL, never
+# shown anywhere on the site. Sent via Gmail SMTP using an App Password
+# (NOT your regular Gmail password — regular passwords don't work here):
+#   1. Turn on 2-Step Verification on the Gmail account: myaccount.google.com/security
+#   2. Create an App Password: myaccount.google.com/apppasswords
+#      (choose "Mail" as the app) — copy the 16-character password it gives you.
+# If these are left unset, reports still save to the database — they just
+# won't also be emailed.
+CONTACT_EMAIL="augustechtechnologies@gmail.com"
+GMAIL_USER="augustechtechnologies@gmail.com"
+GMAIL_APP_PASSWORD="xxxxxxxxxxxxxxxx"
