@@ -39,6 +39,24 @@ module.exports = {
         youtube: {
           DEFAULT: "#FF0000",
         },
+        deezer: {
+          DEFAULT: "#FEAA2D",
+        },
+        tidal: {
+          DEFAULT: "#FFFFFF",
+        },
+        soundcloud: {
+          DEFAULT: "#FF3300",
+        },
+        pandora: {
+          DEFAULT: "#224099",
+        },
+        iheartradio: {
+          DEFAULT: "#C6002B",
+        },
+        whatsapp: {
+          DEFAULT: "#25D366",
+        },
       },
       boxShadow: {
         glass: "0 8px 32px 0 rgba(0, 0, 0, 0.45)",
