@@ -952,7 +952,7 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
             {/* ---------------- Custom Link ---------------- */}
             <div>
               <label className="block text-xs font-semibold text-base-muted mb-1.5">
-                Custom Link (optional — like ditto.fm/catch-the-feeling)
+                Custom Link (optional — like droppa.fm/catch-the-feeling)
               </label>
               <div className="flex items-center bg-base-bg border border-base-border rounded-lg px-3.5 py-2.5 focus-within:border-brand transition">
                 <span className="text-sm text-base-muted whitespace-nowrap">
