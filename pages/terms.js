@@ -28,7 +28,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-white font-bold text-lg mb-2">2. What Droppa.fm is</h2>
             <p>
-              Droppa.fm lets creators build a single SmartLink page linking out to their music
+              Droppa.fm lets creators build a single SmartLink page linking out to their music and creativity
               across streaming platforms, collect fan pre-saves, and view click analytics. Free
               and paid (Premium) tiers are available, as described on our pricing page.
             </p>
