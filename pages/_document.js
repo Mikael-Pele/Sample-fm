@@ -14,6 +14,17 @@ export default function Document() {
           content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover"
         />
         <meta name="theme-color" content="#0A0A0C" />
+
+        {/* PWA: lets a fan or creator "install" Droppa.fm straight from the
+            browser (Android/desktop Chrome get a real install prompt; iOS
+            Safari needs the manual Share → Add to Home Screen flow, which
+            InstallAppPrompt.js walks them through). */}
+        <link rel="manifest" href="/manifest.json" />
+        <link rel="icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Droppa.fm" />
       </Head>
       <body>
         <Main />
