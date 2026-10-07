@@ -19,6 +19,7 @@ import {
   DroppaFmMark,
 } from "./PlatformIcons";
 import SiteFooter from "./SiteFooter";
+import InstallAppPrompt from "./InstallAppPrompt";
 import { ReportProblemTrigger } from "./ReportProblemModal";
 import { FREE_TIER_LINK_LIMIT, REGION_PRICING } from "../lib/plans";
 
@@ -636,6 +637,7 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
       </header>
 
       <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10 space-y-8 sm:space-y-10">
+        <InstallAppPrompt />
         {/* ---------------- Billing Component ---------------- */}
         <section id="billing" className="glass-card rounded-xl2 p-5 sm:p-6 scroll-mt-24">
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 mb-5">
