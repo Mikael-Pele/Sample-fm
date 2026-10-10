@@ -45,7 +45,7 @@ export default function BillingCallback() {
 
         {status === "success" && (
           <>
-            <div className="text-lg font-semibold mb-2 text-brand-light">You&rsquo;re on Premium</div>
+            <div className="text-lg font-semibold mb-2 text-brand-light">You&rsquo;re on Droppa.fm Artist</div>
             <p className="text-base-muted text-sm">Taking you back to your dashboard…</p>
           </>
         )}

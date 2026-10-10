@@ -1,6 +1,6 @@
 import prisma from "../../../lib/prisma";
 import { getSessionFromRequest } from "../../../lib/auth";
-import { PLAN_AMOUNTS_SUBUNIT } from "../../../lib/plans";
+import { PLAN, PLAN_AMOUNT_SUBUNIT } from "../../../lib/plans";
 
 // Falls back to the actual request's own host if NEXT_PUBLIC_APP_URL isn't
 // set in the deployment's environment variables. Without this, a missing
@@ -14,8 +14,7 @@ function resolveAppUrl(req) {
   return host ? `${proto}://${host}` : "";
 }
 
-// Starts a Paystack transaction for the plan the user picked in the
-// billing panel, and hands back the one-time checkout URL to redirect to.
+// Starts a Paystack transaction for the yearly plan from the billing panel, and hands back the one-time checkout URL to redirect to.
 // This replaces static Payment Page links — the amount, currency, and
 // which user/plan this is for are all set here, server-side, from
 // lib/plans.js, so there's a single source of truth instead of a Payment
@@ -37,14 +36,7 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "Payments aren't configured yet." });
   }
 
-  const { region, billing_interval } = req.body || {};
-  const chosenRegion = region === "africa" ? "africa" : "global";
-  const chosenInterval = billing_interval === "yearly" ? "yearly" : "monthly";
-  const amount = PLAN_AMOUNTS_SUBUNIT[`${chosenRegion}_${chosenInterval}`];
-
-  if (!amount) {
-    return res.status(400).json({ error: "Unknown plan." });
-  }
+  const amount = PLAN_AMOUNT_SUBUNIT;
 
   try {
     const user = await prisma.user.findUnique({ where: { id: session.userId } });
@@ -67,8 +59,7 @@ export default async function handler(req, res) {
         callback_url: `${appUrl}/billing/callback`,
         metadata: {
           user_id: user.id,
-          region: chosenRegion,
-          billing_interval: chosenInterval,
+          billing_interval: PLAN.interval,
         },
       }),
     });

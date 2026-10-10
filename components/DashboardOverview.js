@@ -1,5 +1,7 @@
 import ClicksChart from "./ClicksChart";
 import { initialsFor } from "./DashboardLayout";
+import { StatusPill, formatReleaseDate } from "./ReleasesPage";
+import { rangeDescription } from "./RangePicker";
 
 export function StatTile({ label, value, hint, hintClass = "text-base-muted" }) {
   return (
@@ -38,8 +40,7 @@ function Card({ title, action, onAction, children, className = "" }) {
 export default function DashboardOverview({
   analytics,
   links,
-  isPro,
-  freeLimit,
+  linksHint,
   ranges,
   range,
   onRangeChange,
@@ -50,6 +51,8 @@ export default function DashboardOverview({
   onNavigate,
   onShowLinkStats,
   onUpgrade,
+  releases = [],
+  epk = null,
 }) {
   const clicksByLink = new Map(
     ((analytics && analytics.link_breakdown) || []).map((row) => [row.link_id, row.count])
@@ -62,13 +65,23 @@ export default function DashboardOverview({
   const topPlatforms = ((analytics && analytics.platform_breakdown) || []).slice(0, 4);
   const lifetimeClicks = links.reduce((sum, l) => sum + (l._count?.analytics ?? 0), 0);
   const lifetimePresaves = links.reduce((sum, l) => sum + (l._count?.presaves ?? 0), 0);
+  // Upcoming first (soonest date), then drafts, then the latest live ones.
+  const statusOrder = { soon: 0, draft: 1, live: 2 };
+  const releaseList = [...releases]
+    .sort((a, b) => {
+      if (statusOrder[a.status] !== statusOrder[b.status]) return statusOrder[a.status] - statusOrder[b.status];
+      const da = a.release_date || "";
+      const db = b.release_date || "";
+      return a.status === "live" ? db.localeCompare(da) : da.localeCompare(db);
+    })
+    .slice(0, 4);
   const platformsUsed = platformFields.filter((f) => links.some((l) => l[f.key]));
 
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <StatTile
-          label={`Clicks (${range}d)`}
+          label={`Clicks (${analytics ? analytics.range_days : range}d)`}
           value={analytics ? analytics.total_clicks.toLocaleString() : "—"}
           hint={delta.text}
           hintClass={delta.className}
@@ -76,7 +89,7 @@ export default function DashboardOverview({
         <StatTile
           label="Active SmartLinks"
           value={links.length}
-          hint={isPro ? "Unlimited on Premium" : `${links.length}/${freeLimit} on Free`}
+          hint={linksHint}
         />
         <StatTile label="Pre-Saves" value={analytics ? analytics.presave_count : "—"} />
         <StatTile
@@ -91,9 +104,9 @@ export default function DashboardOverview({
 
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="glass-card rounded-xl2 overflow-hidden min-w-0 lg:col-span-2">
-          <div className="flex items-center justify-between gap-3 px-4 sm:px-5 py-3 border-b border-base-border">
-            <h2 className="font-bold text-sm">Link Clicks — Last {range} Days</h2>
-            <div role="group" aria-label="Date range" className="flex shrink-0">
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-4 sm:px-5 py-3 border-b border-base-border">
+            <h2 className="font-bold text-sm">Link Clicks {rangeDescription(analytics, range)}</h2>
+            <div role="group" aria-label="Date range" className="flex flex-wrap shrink-0">
               {ranges.map((days) => (
                 <button
                   key={days}
@@ -109,6 +122,20 @@ export default function DashboardOverview({
                   {days}d
                 </button>
               ))}
+              {/* The date pickers live on the Analytics page. */}
+              <button
+                type="button"
+                onClick={() => {
+                  onRangeChange("custom");
+                  onNavigate("analytics");
+                }}
+                aria-pressed={range === "custom"}
+                className={`px-2.5 py-1.5 text-xs font-semibold border-b-2 transition ${
+                  range === "custom" ? "border-brand text-fg" : "border-transparent text-base-muted hover:text-fg"
+                }`}
+              >
+                Custom
+              </button>
             </div>
           </div>
           <div className="px-3 sm:px-4 pt-4 pb-2">
@@ -126,7 +153,7 @@ export default function DashboardOverview({
                   onClick={onUpgrade}
                   className="text-brand-light hover:text-brand font-semibold"
                 >
-                  Upgrade
+                  Subscribe
                 </button>{" "}
                 to see which platforms your fans pick.
               </p>
@@ -204,11 +231,33 @@ export default function DashboardOverview({
             </div>
           </Card>
 
-          <Card title="Upcoming Releases" action="+ Add" onAction={() => onNavigate("releases")}>
-            <div className="px-4 sm:px-5 py-6 text-center">
-              <p className="text-sm text-base-muted">
-                The release tracker is coming soon. Upcoming, live and draft releases will show here.
-              </p>
+          <Card title="Releases" action="+ Add" onAction={() => onNavigate("releases")}>
+            <div className="px-4 sm:px-5 py-1.5">
+              {releaseList.length === 0 ? (
+                <p className="py-6 text-center text-sm text-base-muted">
+                  No releases yet. Add upcoming, live and draft releases to track them here.
+                </p>
+              ) : (
+                releaseList.map((r) => (
+                  <button
+                    key={r.id}
+                    type="button"
+                    onClick={() => onNavigate("releases")}
+                    className="w-full flex items-center gap-3 py-2.5 border-b border-base-border/60 last:border-b-0 text-left group"
+                  >
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm font-semibold truncate group-hover:text-brand-light transition">
+                        {r.title}
+                      </span>
+                      <span className="block text-xs text-base-muted truncate">
+                        {formatReleaseDate(r.release_date)}
+                        {r.distributor ? ` · ${r.distributor}` : ""}
+                      </span>
+                    </span>
+                    <StatusPill status={r.status} />
+                  </button>
+                ))
+              )}
             </div>
           </Card>
         </div>
@@ -230,7 +279,9 @@ export default function DashboardOverview({
             </span>
             <div className="relative">
               <div className="text-lg font-extrabold">{artistName}</div>
-              <div className="text-xs text-base-muted">Your press kit page is coming soon</div>
+              <div className="text-xs text-base-muted">
+                {epk && epk.published ? `droppa.fm/epk/${epk.handle}` : "Your press kit isn't public yet"}
+              </div>
             </div>
             <div className="relative flex gap-6">
               <div>
@@ -258,14 +309,24 @@ export default function DashboardOverview({
                 ))}
               </div>
             )}
-            <button
-              type="button"
-              disabled
-              className="relative self-start bg-brand text-white text-xs font-bold rounded-md px-3.5 py-2 opacity-60 cursor-not-allowed"
-              title="Coming soon"
-            >
-              Share EPK →
-            </button>
+            {epk && epk.published ? (
+              <a
+                href={`/epk/${epk.handle}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="relative self-start bg-brand hover:bg-brand-dark transition text-white text-xs font-bold rounded-md px-3.5 py-2"
+              >
+                Share EPK →
+              </a>
+            ) : (
+              <button
+                type="button"
+                onClick={() => onNavigate("epk")}
+                className="relative self-start bg-brand hover:bg-brand-dark transition text-white text-xs font-bold rounded-md px-3.5 py-2"
+              >
+                Set up EPK →
+              </button>
+            )}
           </div>
         </div>
       </Card>

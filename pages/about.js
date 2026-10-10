@@ -25,8 +25,8 @@ export default function AboutPage() {
               Droppa.fm is a SmartLink and pre-save platform for independent artists, labels, and
               creators. Instead of sharing a separate link for every streaming platform, a creator
               builds one Droppa.fm page that routes fans to Audiomack, Boomplay, Spotify, Apple
-              Music, YouTube, and more — with pre-save collection, retargeting pixels, and click
-              analytics built in.
+              Music, YouTube, and more — with pre-save collection and click analytics
+              built in.
             </p>
           </section>
 
@@ -35,8 +35,8 @@ export default function AboutPage() {
             <p>
               We built Droppa.fm specifically with independent African creators in mind, where
               existing SmartLink tools are often priced in a way that&apos;s out of reach.
-              Droppa.fm offers a free tier for creators just getting started, and an affordable
-              Premium tier priced for the regions we serve.
+              Droppa.fm starts with a 7-day free trial, then one simple yearly plan at the same
+              price for everyone.
             </p>
           </section>
 

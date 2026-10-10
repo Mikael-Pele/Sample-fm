@@ -7,8 +7,7 @@ import ThemeToggle from "../components/ThemeToggle";
 import { DroppaFmMark } from "../components/PlatformIcons";
 import InstallAppPrompt from "../components/InstallAppPrompt";
 import prisma from "../lib/prisma";
-import { extractCountryFromHeaders } from "../lib/geo";
-import { getRegionForCountry, REGION_PRICING } from "../lib/plans";
+import { PLAN, TRIAL_DAYS } from "../lib/plans";
 
 function getAppHost() {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL;
@@ -20,7 +19,7 @@ function getAppHost() {
   }
 }
 
-export async function getServerSideProps({ req, query }) {
+export async function getServerSideProps({ req }) {
   const requestHost = (req.headers.host || "").toLowerCase().split(":")[0];
   const appHost = getAppHost();
   const isKnownAppHost =
@@ -41,17 +40,10 @@ export async function getServerSideProps({ req, query }) {
     }
   }
 
-  const headerCountry = extractCountryFromHeaders(req.headers);
-  const country =
-    headerCountry && headerCountry !== "UNKNOWN"
-      ? headerCountry
-      : (query.demo_country || "").toString().toUpperCase() || null;
-
-  return { props: { pricingRegion: getRegionForCountry(country) } };
+  return { props: {} };
 }
 
-export default function HomePage({ pricingRegion }) {
-  const price = REGION_PRICING[pricingRegion] || REGION_PRICING.global;
+export default function HomePage() {
   const router = useRouter();
   const [mode, setMode] = useState("register");
   const [email, setEmail] = useState("");
@@ -122,22 +114,23 @@ export default function HomePage({ pricingRegion }) {
           <p className="text-base-muted text-lg mb-8 max-w-md">
             Droppa.fm gives independent artists and labels a single SmartLink
             for Audiomack, Boomplay, Spotify, Apple Music and YouTube — with
-            pre-saves, retargeting pixels, and fan analytics built in.
+            pre-saves and fan analytics built in.
           </p>
           <div className="grid grid-cols-2 gap-4 max-w-md text-sm">
             <div className="glass-card rounded-xl p-4">
-              <div className="text-brand font-bold text-2xl mb-1">Free</div>
-              <div className="text-base-muted">Up to 3 SmartLinks, basic analytics</div>
+              <div className="text-brand font-bold text-2xl mb-1">{TRIAL_DAYS} days free</div>
+              <div className="text-base-muted">One SmartLink with everything unlocked, no card needed</div>
             </div>
             <div className="glass-card rounded-xl p-4 border-brand/40">
-              <div className="text-brand-light font-bold text-2xl mb-1">${price.monthly}/mo</div>
+              <div className="text-brand-light font-bold text-2xl mb-1">${PLAN.priceUsd}/yr</div>
               <div className="text-base-muted">
-                Unlimited links, pixels, custom domains, no branding
+                Unlimited links, full analytics, fan emails, no branding
               </div>
             </div>
           </div>
           <p className="text-xs text-base-muted mt-3 max-w-md">
-            Or ${price.yearly}/yr on Premium — two months free.
+            Founding-artist price, locked in while you stay subscribed. Custom domains, ad pixels
+            and team logins are coming soon.
           </p>
         </div>
 
@@ -168,7 +161,7 @@ export default function HomePage({ pricingRegion }) {
           </h2>
           <p className="text-base-muted text-sm mb-6">
             {mode === "register"
-              ? `Free forever, up to 3 SmartLinks. Upgrade any time for $${price.monthly}/mo.`
+              ? `Start with a ${TRIAL_DAYS}-day free trial. Then $${PLAN.priceUsd} a year.`
               : "Sign in to manage your SmartLinks."}
           </p>
 
@@ -217,7 +210,7 @@ export default function HomePage({ pricingRegion }) {
               {loading
                 ? "Please wait…"
                 : mode === "register"
-                ? "Create my free account"
+                ? "Start my free trial"
                 : "Sign in"}
             </button>
 

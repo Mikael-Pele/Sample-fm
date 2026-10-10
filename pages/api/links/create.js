@@ -1,7 +1,7 @@
 import prisma from "../../../lib/prisma";
 import { getSessionFromRequest } from "../../../lib/auth";
 import { generateSlug } from "../../../lib/slug";
-import { ensurePlanCurrent, FREE_TIER_LINK_LIMIT } from "../../../lib/plans";
+import { ensurePlanCurrent, getAccessStatus, hasFullAccess, PIXELS_ENABLED, TRIAL_LINK_LIMIT } from "../../../lib/plans";
 import { findPreviewUrl } from "../../../lib/previewLookup";
 import {
   validateCoreFields,
@@ -32,15 +32,23 @@ export default async function handler(req, res) {
 
     user = await ensurePlanCurrent(prisma, user);
 
-    // ---- Free tier link cap ---------------------------------------------
-    // Free stays genuinely free (no card required) but is capped so hosting
-    // cost per free user stays bounded — Premium revenue is what actually
-    // pays for infrastructure. Premium is unlimited.
-    if (!user.is_pro) {
+    // ---- Plan gate --------------------------------------------------------
+    // Every account starts on a free trial; once that (or a paid year) runs
+    // out, existing SmartLinks stay live but new ones need a subscription.
+    if (!hasFullAccess(user)) {
+      return res.status(402).json({
+        error: "Your free trial has ended. Subscribe to Droppa.fm Artist to create new SmartLinks.",
+        code: "subscription_required",
+      });
+    }
+
+    // The trial is for trying one release; more links need a subscription.
+    if (getAccessStatus(user) === "trial") {
       const existingCount = await prisma.smartLink.count({ where: { user_id: user.id } });
-      if (existingCount >= FREE_TIER_LINK_LIMIT) {
+      if (existingCount >= TRIAL_LINK_LIMIT) {
         return res.status(403).json({
-          error: `Free tier is limited to ${FREE_TIER_LINK_LIMIT} SmartLinks. Delete one, or upgrade to Premium for unlimited.`,
+          error: `The free trial includes ${TRIAL_LINK_LIMIT} SmartLink. Subscribe to Droppa.fm Artist to create more.`,
+          code: "trial_link_limit",
         });
       }
     }
@@ -65,8 +73,8 @@ export default async function handler(req, res) {
       is_presave,
     } = core;
 
-    // ---- 2-Tier Monetization Enforcement --------------------------------
-    const { pixel_fb, pixel_tiktok, droppedFields } = resolveProOnlyFields(payload, user.is_pro);
+    // ---- Pixels (coming soon) -------------------------------------------
+    const { pixel_fb, pixel_tiktok, droppedFields } = resolveProOnlyFields(payload, PIXELS_ENABLED);
 
     // ---- Custom vanity slug (optional) ----------------------------------
     // e.g. droppa.fm/catch-the-feeling instead of a random string. Falls
@@ -142,7 +150,7 @@ export default async function handler(req, res) {
 
     return res.status(201).json({
       smartlink,
-      tier: user.is_pro ? "premium" : "free",
+      tier: user.is_pro ? "premium" : "trial",
       dropped_fields: droppedFields,
       share_url: `${process.env.NEXT_PUBLIC_APP_URL || ""}/${smartlink.slug}`,
     });
