@@ -39,7 +39,7 @@ export default function VerifyEmail() {
   }, [router.isReady, router.query]);
 
   return (
-    <div className="relative min-h-screen bg-base-bg text-white overflow-hidden flex items-center justify-center px-4">
+    <div className="relative min-h-screen bg-base-bg text-fg overflow-hidden flex items-center justify-center px-4">
       <div className="light-streaks" aria-hidden="true" />
       <Head>
         <title>Verify your email — Droppa.fm</title>

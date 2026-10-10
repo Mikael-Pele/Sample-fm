@@ -5,7 +5,7 @@ const EFFECTIVE_DATE = "September 14, 2026";
 
 export default function RefundPolicyPage() {
   return (
-    <div className="min-h-screen bg-base-bg text-white">
+    <div className="min-h-screen bg-base-bg text-fg">
       <Head>
         <title>Refund &amp; Cancellation Policy — Droppa.fm</title>
       </Head>
@@ -18,7 +18,7 @@ export default function RefundPolicyPage() {
 
         <div className="space-y-8 text-sm leading-relaxed text-base-muted">
           <section>
-            <h2 className="text-white font-bold text-lg mb-2">1. What we sell</h2>
+            <h2 className="text-fg font-bold text-lg mb-2">1. What we sell</h2>
             <p>
               Droppa.fm is a digital subscription service, not a physical product. There is no
               shipping or physical delivery — access to Premium features (unlimited SmartLinks,
@@ -28,7 +28,7 @@ export default function RefundPolicyPage() {
           </section>
 
           <section>
-            <h2 className="text-white font-bold text-lg mb-2">2. Billing cycle</h2>
+            <h2 className="text-fg font-bold text-lg mb-2">2. Billing cycle</h2>
             <p>
               Premium is billed either monthly or yearly, depending on the plan you choose at
               checkout. Your subscription automatically renews at the end of each billing period
@@ -37,7 +37,7 @@ export default function RefundPolicyPage() {
           </section>
 
           <section>
-            <h2 className="text-white font-bold text-lg mb-2">3. Cancellations</h2>
+            <h2 className="text-fg font-bold text-lg mb-2">3. Cancellations</h2>
             <p>
               You can cancel your Premium subscription at any time from your dashboard. When you
               cancel, you keep full Premium access until the end of the billing period you already
@@ -48,7 +48,7 @@ export default function RefundPolicyPage() {
           </section>
 
           <section>
-            <h2 className="text-white font-bold text-lg mb-2">4. Refunds</h2>
+            <h2 className="text-fg font-bold text-lg mb-2">4. Refunds</h2>
             <p>
               Because Premium access is granted immediately on payment, subscription fees are
               generally non-refundable. The exceptions are: a duplicate or accidental charge, a
@@ -61,7 +61,7 @@ export default function RefundPolicyPage() {
           </section>
 
           <section>
-            <h2 className="text-white font-bold text-lg mb-2">5. Failed or disputed payments</h2>
+            <h2 className="text-fg font-bold text-lg mb-2">5. Failed or disputed payments</h2>
             <p>
               If a payment fails or is disputed with your card issuer, Premium access is not
               granted (or is suspended if already active) until the payment is resolved.
@@ -69,7 +69,7 @@ export default function RefundPolicyPage() {
           </section>
 
           <section>
-            <h2 className="text-white font-bold text-lg mb-2">6. Contact</h2>
+            <h2 className="text-fg font-bold text-lg mb-2">6. Contact</h2>
             <p>
               Billing questions? Reach us via the &quot;Report a problem&quot; link on the site, or
               see our <Link href="/faq" className="text-brand-light hover:text-brand transition">FAQ</Link>.

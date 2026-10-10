@@ -35,7 +35,7 @@ export default function ForgotPassword() {
   }
 
   return (
-    <div className="relative min-h-screen bg-base-bg text-white overflow-hidden flex items-center justify-center px-4">
+    <div className="relative min-h-screen bg-base-bg text-fg overflow-hidden flex items-center justify-center px-4">
       <div className="light-streaks" aria-hidden="true" />
       <Head>
         <title>Reset your password — Droppa.fm</title>
@@ -93,7 +93,7 @@ export default function ForgotPassword() {
               </button>
 
               <p className="text-center">
-                <Link href="/" className="text-xs text-base-muted hover:text-white transition">
+                <Link href="/" className="text-xs text-base-muted hover:text-fg transition">
                   Back to sign in
                 </Link>
               </p>

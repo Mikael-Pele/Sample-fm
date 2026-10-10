@@ -7,7 +7,7 @@ export function ReportProblemTrigger({ className = "" }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={className || "text-base-muted hover:text-white transition"}
+        className={className || "text-base-muted hover:text-fg transition"}
       >
         Report a problem
       </button>
@@ -67,7 +67,7 @@ export default function ReportProblemModal({ onClose }) {
           type="button"
           onClick={onClose}
           aria-label="Close"
-          className="absolute top-3 right-3 w-7 h-7 flex items-center justify-center rounded-full bg-base-bg border border-base-border text-base-muted hover:text-white transition"
+          className="absolute top-3 right-3 w-7 h-7 flex items-center justify-center rounded-full bg-base-bg border border-base-border text-base-muted hover:text-fg transition"
         >
           ✕
         </button>

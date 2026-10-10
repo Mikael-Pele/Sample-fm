@@ -5,6 +5,11 @@ import { Html, Head, Main, NextScript } from "next/document";
 // a fixed ~980px desktop layout width and try to shrink/reflow the page to
 // fit — which is what caused text and containers to visibly shift position
 // between portrait and landscape on phones. This fixes that at the root.
+// Runs before first paint so the page never flashes the wrong theme: use the
+// theme the user picked last time, otherwise follow the device setting.
+// Keep the storage key in sync with THEME_STORAGE_KEY in ThemeToggle.js.
+const themeInitScript = `(function(){try{var t=localStorage.getItem("droppa-theme");if(t!=="light"&&t!=="dark"){t=window.matchMedia&&window.matchMedia("(prefers-color-scheme: light)").matches?"light":"dark"}if(t==="light"){document.documentElement.classList.add("light");var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content","#F6F5F2")}}catch(e){}})();`;
+
 export default function Document() {
   return (
     <Html lang="en">
@@ -27,6 +32,7 @@ export default function Document() {
         <meta name="apple-mobile-web-app-title" content="Droppa.fm" />
       </Head>
       <body>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <Main />
         <NextScript />
       </body>

@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 import Head from "next/head";
 import SiteFooter from "../components/SiteFooter";
+import ThemeToggle from "../components/ThemeToggle";
 import { DroppaFmMark } from "../components/PlatformIcons";
 import InstallAppPrompt from "../components/InstallAppPrompt";
 import prisma from "../lib/prisma";
@@ -86,7 +87,7 @@ export default function HomePage({ pricingRegion }) {
   }
 
   return (
-    <div className="relative min-h-screen bg-base-bg text-white overflow-hidden">
+    <div className="relative min-h-screen bg-base-bg text-fg overflow-hidden">
       <div className="light-streaks" aria-hidden="true" />
       <Head>
         <title>Droppa.fm — SmartLinks &amp; Pre-Saves for Independent Music Creators</title>
@@ -96,11 +97,12 @@ export default function HomePage({ pricingRegion }) {
         />
       </Head>
 
-      <header className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 pt-6 sm:pt-8">
+      <header className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 pt-6 sm:pt-8 flex items-center justify-between gap-3">
         <Link href="/" className="inline-flex items-center gap-2">
           <DroppaFmMark size={32} />
           <span className="font-bold text-lg">Droppa.fm</span>
         </Link>
+        <ThemeToggle />
       </header>
 
       <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-16 grid md:grid-cols-2 gap-10 md:gap-16 items-center">
@@ -145,7 +147,7 @@ export default function HomePage({ pricingRegion }) {
               type="button"
               onClick={() => setMode("register")}
               className={`flex-1 py-2.5 text-sm font-semibold transition ${
-                mode === "register" ? "bg-brand text-white" : "text-base-muted hover:text-white"
+                mode === "register" ? "bg-brand text-white" : "text-base-muted hover:text-fg"
               }`}
             >
               Create Account
@@ -154,7 +156,7 @@ export default function HomePage({ pricingRegion }) {
               type="button"
               onClick={() => setMode("login")}
               className={`flex-1 py-2.5 text-sm font-semibold transition ${
-                mode === "login" ? "bg-brand text-white" : "text-base-muted hover:text-white"
+                mode === "login" ? "bg-brand text-white" : "text-base-muted hover:text-fg"
               }`}
             >
               Sign In
@@ -221,7 +223,7 @@ export default function HomePage({ pricingRegion }) {
 
             {mode === "login" ? (
               <p className="text-center">
-                <Link href="/forgot-password" className="text-xs text-base-muted hover:text-white transition">
+                <Link href="/forgot-password" className="text-xs text-base-muted hover:text-fg transition">
                   Forgot your password?
                 </Link>
               </p>

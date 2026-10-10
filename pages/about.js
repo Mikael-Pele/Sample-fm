@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-base-bg text-white">
+    <div className="min-h-screen bg-base-bg text-fg">
       <Head>
         <title>About — Droppa.fm</title>
         <meta
@@ -20,7 +20,7 @@ export default function AboutPage() {
 
         <div className="space-y-8 text-sm leading-relaxed text-base-muted">
           <section>
-            <h2 className="text-white font-bold text-lg mb-2">What we do</h2>
+            <h2 className="text-fg font-bold text-lg mb-2">What we do</h2>
             <p>
               Droppa.fm is a SmartLink and pre-save platform for independent artists, labels, and
               creators. Instead of sharing a separate link for every streaming platform, a creator
@@ -31,7 +31,7 @@ export default function AboutPage() {
           </section>
 
           <section>
-            <h2 className="text-white font-bold text-lg mb-2">Who it&apos;s for</h2>
+            <h2 className="text-fg font-bold text-lg mb-2">Who it&apos;s for</h2>
             <p>
               We built Droppa.fm specifically with independent African creators in mind, where
               existing SmartLink tools are often priced in a way that&apos;s out of reach.
@@ -41,7 +41,7 @@ export default function AboutPage() {
           </section>
 
           <section>
-            <h2 className="text-white font-bold text-lg mb-2">How billing works</h2>
+            <h2 className="text-fg font-bold text-lg mb-2">How billing works</h2>
             <p>
               Paid subscriptions are processed securely through Paystack. We never see or store
               your card details — Paystack handles that directly. See our{" "}
@@ -53,7 +53,7 @@ export default function AboutPage() {
           </section>
 
           <section>
-            <h2 className="text-white font-bold text-lg mb-2">Get in touch</h2>
+            <h2 className="text-fg font-bold text-lg mb-2">Get in touch</h2>
             <p>
               Questions, feedback, or an issue to report? Use the &quot;Report a problem&quot; link
               in the footer of any page, or visit our{" "}

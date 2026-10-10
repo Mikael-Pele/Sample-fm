@@ -4,7 +4,7 @@ import { ReportProblemTrigger } from "../components/ReportProblemModal";
 
 export default function FeedbackPage() {
   return (
-    <div className="min-h-screen bg-base-bg text-white">
+    <div className="min-h-screen bg-base-bg text-fg">
       <Head>
         <title>Customer Feedback — Droppa.fm</title>
         <meta
@@ -25,7 +25,7 @@ export default function FeedbackPage() {
 
         <div className="space-y-6">
           <div className="glass-card rounded-xl p-5">
-            <h2 className="text-white font-bold mb-2">Report a problem</h2>
+            <h2 className="text-fg font-bold mb-2">Report a problem</h2>
             <p className="text-sm leading-relaxed text-base-muted mb-4">
               Found a bug, a broken link, or something that doesn&apos;t look right? Tell us and
               we&apos;ll look into it.
@@ -34,7 +34,7 @@ export default function FeedbackPage() {
           </div>
 
           <div className="glass-card rounded-xl p-5">
-            <h2 className="text-white font-bold mb-2">Questions about billing or features</h2>
+            <h2 className="text-fg font-bold mb-2">Questions about billing or features</h2>
             <p className="text-sm leading-relaxed text-base-muted">
               Check our{" "}
               <Link href="/faq" className="text-brand-light hover:text-brand transition">
@@ -46,7 +46,7 @@ export default function FeedbackPage() {
           </div>
 
           <div className="glass-card rounded-xl p-5">
-            <h2 className="text-white font-bold mb-2">General feedback &amp; feature requests</h2>
+            <h2 className="text-fg font-bold mb-2">General feedback &amp; feature requests</h2>
             <p className="text-sm leading-relaxed text-base-muted">
               Building for independent creators means the roadmap is shaped by what they actually
               need. If there&apos;s a feature you&apos;d like to see, use the same report form —

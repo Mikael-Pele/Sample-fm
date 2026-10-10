@@ -28,7 +28,7 @@ export default function PermissionsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-base-bg text-white">
+    <div className="min-h-screen bg-base-bg text-fg">
       <Head>
         <title>Manage Permissions — Droppa.fm</title>
       </Head>

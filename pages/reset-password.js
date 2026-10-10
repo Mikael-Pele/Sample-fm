@@ -48,7 +48,7 @@ export default function ResetPassword() {
   }
 
   return (
-    <div className="relative min-h-screen bg-base-bg text-white overflow-hidden flex items-center justify-center px-4">
+    <div className="relative min-h-screen bg-base-bg text-fg overflow-hidden flex items-center justify-center px-4">
       <div className="light-streaks" aria-hidden="true" />
       <Head>
         <title>Set a new password — Droppa.fm</title>

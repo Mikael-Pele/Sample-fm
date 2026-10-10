@@ -95,10 +95,10 @@ export default function ClicksChart({ daily }) {
                 x2={PAD.left + plotW}
                 y1={y(v)}
                 y2={y(v)}
-                stroke="#242427"
+                className="stroke-base-border"
                 strokeDasharray={v === 0 ? undefined : "3 4"}
               />
-              <text x={PAD.left - 8} y={y(v) + 4} textAnchor="end" fontSize="10" fill="#71717A">
+              <text x={PAD.left - 8} y={y(v) + 4} textAnchor="end" fontSize="10" className="fill-base-muted">
                 {Number.isInteger(v) ? v : v.toFixed(1)}
               </text>
             </g>
@@ -120,7 +120,7 @@ export default function ClicksChart({ daily }) {
               x={x(i)}
               y={HEIGHT - 6}
               fontSize="10"
-              fill="#71717A"
+              className="fill-base-muted"
               textAnchor={n === 0 ? "start" : n === xLabelIndexes.length - 1 ? "end" : "middle"}
             >
               {formatDay(points[i].date)}
@@ -134,7 +134,7 @@ export default function ClicksChart({ daily }) {
                 x2={x(hoverIndex)}
                 y1={PAD.top}
                 y2={baseline}
-                stroke="#71717A"
+                className="stroke-base-muted"
                 strokeWidth="1"
               />
               <circle
@@ -142,7 +142,7 @@ export default function ClicksChart({ daily }) {
                 cy={y(hovered.count)}
                 r="4.5"
                 fill={LINE_COLOR}
-                stroke="#121214"
+                className="stroke-base-card"
                 strokeWidth="2"
               />
             </g>
@@ -159,7 +159,7 @@ export default function ClicksChart({ daily }) {
           }}
         >
           <div className="text-base-muted">{formatDay(hovered.date, true)}</div>
-          <div className="font-semibold text-white">
+          <div className="font-semibold text-fg">
             {hovered.count} click{hovered.count === 1 ? "" : "s"}
           </div>
         </div>

@@ -5,7 +5,7 @@ const EFFECTIVE_DATE = "September 2, 2026";
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen bg-base-bg text-white">
+    <div className="min-h-screen bg-base-bg text-fg">
       <Head>
         <title>Terms of Use — Droppa.fm</title>
       </Head>
@@ -18,7 +18,7 @@ export default function TermsPage() {
 
         <div className="space-y-8 text-sm leading-relaxed text-base-muted">
           <section>
-            <h2 className="text-white font-bold text-lg mb-2">1. Agreement</h2>
+            <h2 className="text-fg font-bold text-lg mb-2">1. Agreement</h2>
             <p>
               By creating an account or using Droppa.fm, you agree to these Terms of Use. If you
               don&apos;t agree, please don&apos;t use the service.
@@ -26,7 +26,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-white font-bold text-lg mb-2">2. What Droppa.fm is</h2>
+            <h2 className="text-fg font-bold text-lg mb-2">2. What Droppa.fm is</h2>
             <p>
               Droppa.fm lets creators build a single SmartLink page linking out to their music and creativity
               across streaming platforms, collect fan pre-saves, and view click analytics. Free
@@ -35,7 +35,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-white font-bold text-lg mb-2">3. Your account</h2>
+            <h2 className="text-fg font-bold text-lg mb-2">3. Your account</h2>
             <p>
               You&apos;re responsible for keeping your login credentials secure and for all
               activity under your account. You must provide accurate information when you sign
@@ -44,7 +44,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-white font-bold text-lg mb-2">4. Acceptable use</h2>
+            <h2 className="text-fg font-bold text-lg mb-2">4. Acceptable use</h2>
             <p className="mb-2">You agree not to use Droppa.fm to:</p>
             <p>
               upload content you don&apos;t have the rights to; impersonate another person or
@@ -55,7 +55,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-white font-bold text-lg mb-2">5. Your content</h2>
+            <h2 className="text-fg font-bold text-lg mb-2">5. Your content</h2>
             <p>
               You retain ownership of the artist names, artwork, and links you upload. By
               uploading content, you grant Droppa.fm a limited license to host and display it as
@@ -65,7 +65,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-white font-bold text-lg mb-2">6. Fan pre-saves</h2>
+            <h2 className="text-fg font-bold text-lg mb-2">6. Fan pre-saves</h2>
             <p>
               If you collect fan emails through pre-saves, you agree to use them only for
               communicating about the release fans signed up for, and to comply with applicable
@@ -74,7 +74,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-white font-bold text-lg mb-2">7. Billing</h2>
+            <h2 className="text-fg font-bold text-lg mb-2">7. Billing</h2>
             <p>
               Paid plans are billed through Paystack on the cycle you select at checkout. Fees are
               non-refundable except where required by law. You can cancel a paid plan at any
@@ -83,7 +83,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-white font-bold text-lg mb-2">8. Termination</h2>
+            <h2 className="text-fg font-bold text-lg mb-2">8. Termination</h2>
             <p>
               You may delete your SmartLinks or stop using Droppa.fm at any time. We may suspend
               or terminate accounts that violate these Terms or applicable law.
@@ -91,7 +91,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-white font-bold text-lg mb-2">9. Service &quot;as is&quot;</h2>
+            <h2 className="text-fg font-bold text-lg mb-2">9. Service &quot;as is&quot;</h2>
             <p>
               Droppa.fm is provided on an &quot;as is&quot; and &quot;as available&quot; basis,
               without warranties of any kind. We don&apos;t guarantee uninterrupted or error-free
@@ -100,7 +100,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-white font-bold text-lg mb-2">10. Limitation of liability</h2>
+            <h2 className="text-fg font-bold text-lg mb-2">10. Limitation of liability</h2>
             <p>
               To the fullest extent permitted by law, Droppa.fm is not liable for indirect,
               incidental, or consequential damages arising from your use of the service.
@@ -108,7 +108,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-white font-bold text-lg mb-2">11. Changes</h2>
+            <h2 className="text-fg font-bold text-lg mb-2">11. Changes</h2>
             <p>
               We may update these Terms from time to time. Continued use of Droppa.fm after
               changes take effect means you accept the updated Terms.
@@ -116,7 +116,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-white font-bold text-lg mb-2">12. Contact</h2>
+            <h2 className="text-fg font-bold text-lg mb-2">12. Contact</h2>
             <p>Questions about these Terms? Reach us via the &quot;Report a problem&quot; link on the site.</p>
           </section>
         </div>

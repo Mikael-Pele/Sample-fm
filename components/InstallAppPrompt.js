@@ -68,7 +68,7 @@ export default function InstallAppPrompt() {
     <div className="glass-card rounded-xl2 px-4 py-3 mb-6 flex items-center gap-3">
       <DroppaFmMark size={32} />
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-white">Install Droppa.fm</p>
+        <p className="text-sm font-semibold text-fg">Install Droppa.fm</p>
         <p className="text-xs text-base-muted">
           {platform === "ios"
             ? "Tap the Share icon, then \"Add to Home Screen.\""
@@ -88,7 +88,7 @@ export default function InstallAppPrompt() {
         type="button"
         onClick={dismiss}
         aria-label="Dismiss"
-        className="shrink-0 w-6 h-6 flex items-center justify-center rounded-full text-base-muted hover:text-white transition"
+        className="shrink-0 w-6 h-6 flex items-center justify-center rounded-full text-base-muted hover:text-fg transition"
       >
         ✕
       </button>
