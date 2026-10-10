@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/router";
-import Link from "next/link";
 import {
   AudiomackIcon,
   BoomplayIcon,
@@ -18,11 +17,17 @@ import {
   CommunityIcon,
   UploadIcon,
   LockIcon,
-  DroppaFmMark,
 } from "./PlatformIcons";
 import SiteFooter from "./SiteFooter";
 import ThemeToggle from "./ThemeToggle";
 import ClicksChart from "./ClicksChart";
+import DashboardOverview, { StatTile } from "./DashboardOverview";
+import {
+  DashboardSidebar,
+  ComingSoon,
+  MenuIcon,
+  PAGE_TITLES,
+} from "./DashboardLayout";
 import InstallAppPrompt from "./InstallAppPrompt";
 import { ReportProblemTrigger } from "./ReportProblemModal";
 import { FREE_TIER_LINK_LIMIT, REGION_PRICING } from "../lib/plans";
@@ -38,7 +43,7 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "";
 // A single "upgrade now" link for the small in-context gates scattered
 // through the form (pixels, locked analytics, etc.) — they send people to
 // the plan picker in the billing panel rather than guessing.
-const UPGRADE_ANCHOR = "#billing";
+const UPGRADE_HREF = "/dashboard?page=settings#billing";
 
 const PLAN_DISPLAY = {
   free: "Free",
@@ -136,18 +141,6 @@ function PlatformInput({ field, value, onChange }) {
   );
 }
 
-function StatTile({ label, value, hint, hintClass = "text-base-muted" }) {
-  return (
-    <div className="glass-card rounded-xl p-4 sm:p-5 min-w-0">
-      <div className="text-base-muted text-xs font-semibold uppercase tracking-wide mb-2 truncate">
-        {label}
-      </div>
-      <div className="text-xl sm:text-2xl font-extrabold text-fg truncate">{value}</div>
-      {hint ? <div className={`text-xs font-semibold mt-1.5 truncate ${hintClass}`}>{hint}</div> : null}
-    </div>
-  );
-}
-
 const ANALYTICS_RANGES = [7, 30, 90];
 
 // "↑ 18% vs prior 30d" — compares the selected range against the
@@ -237,6 +230,55 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
 
   const isPro = Boolean(user?.is_pro);
 
+  // Which dashboard page is showing lives in ?page= so it survives reloads
+  // and the back button. Unknown values fall back to the overview.
+  const page = PAGE_TITLES[router.query.page] ? router.query.page : "overview";
+  const [navOpen, setNavOpen] = useState(false);
+  const mainRef = useRef(null);
+  const billingRef = useRef(null);
+  const pendingScrollRef = useRef(null);
+
+  function goToPage(next, scrollTarget) {
+    setNavOpen(false);
+    pendingScrollRef.current = scrollTarget || null;
+    if (next === page) {
+      scrollToPending();
+      return;
+    }
+    // The overview always shows every SmartLink, not one filtered on Analytics.
+    if (next === "overview") setAnalyticsLinkId("");
+    router.push(
+      { pathname: "/dashboard", query: next === "overview" ? {} : { page: next } },
+      undefined,
+      { shallow: true }
+    );
+  }
+
+  function scrollToPending() {
+    const target = pendingScrollRef.current;
+    pendingScrollRef.current = null;
+    if (target && target.current) {
+      target.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else if (window.location.hash === "#billing" && billingRef.current) {
+      // Arriving from Paystack's callback page or an upgrade link.
+      billingRef.current.scrollIntoView({ block: "start" });
+    } else if (mainRef.current) {
+      mainRef.current.scrollTo({ top: 0 });
+    }
+  }
+
+  useEffect(() => {
+    scrollToPending();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page]);
+
+  function goToBilling(e) {
+    if (e) e.preventDefault();
+    goToPage("settings", billingRef);
+  }
+
+  const artistName = links[0]?.artist_name || (user?.email || "").split("@")[0] || "Artist";
+
   const loadLinks = useCallback(async () => {
     const res = await fetch("/api/links/list");
     if (res.ok) {
@@ -268,9 +310,7 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
 
   function showLinkStats(linkId) {
     setAnalyticsLinkId(linkId);
-    if (analyticsRef.current) {
-      analyticsRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
+    goToPage("analytics", analyticsRef);
   }
 
   function handleFieldChange(e) {
@@ -488,9 +528,7 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
       }))
     );
 
-    if (formTopRef.current) {
-      formTopRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
+    goToPage("smartlinks", formTopRef);
   }
 
   function handleCancelEdit() {
@@ -665,41 +703,106 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
   }
 
   return (
-    <div className="relative min-h-screen bg-base-bg text-fg overflow-x-hidden">
+    <div className="relative flex h-[100dvh] overflow-hidden bg-base-bg text-fg">
       <div className="light-streaks" aria-hidden="true" />
-      <header className="border-b border-base-border sticky top-0 bg-base-bg/95 backdrop-blur z-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-3">
-          <Link href="/" className="flex items-center gap-2 min-w-0">
-            <DroppaFmMark size={32} className="rounded-lg" />
-            <span className="font-bold text-lg truncate">Droppa.fm</span>
-          </Link>
-          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
-            <span className="text-sm text-base-muted hidden md:inline truncate max-w-[180px]">
-              {user?.email}
-            </span>
-            <span
-              className={`text-xs font-bold px-2.5 py-1 rounded-full whitespace-nowrap uppercase ${
-                isPro ? "bg-brand text-base-bg" : "bg-base-card text-base-muted border border-base-border"
-              }`}
-            >
-              {PLAN_DISPLAY[user?.plan] || (isPro ? "Pro" : "Free")}
-            </span>
-            <ThemeToggle />
+      <DashboardSidebar
+        page={page}
+        open={navOpen}
+        onNavigate={goToPage}
+        onClose={() => setNavOpen(false)}
+        linkCount={links.length}
+        artistName={artistName}
+        planLabel={PLAN_DISPLAY[user?.plan] || (isPro ? "Premium" : "Free")}
+        isPro={isPro}
+        onLogout={handleLogout}
+      />
+
+      <div ref={mainRef} className="relative z-10 flex-1 min-w-0 overflow-y-auto overflow-x-hidden">
+      <header className="sticky top-0 z-20 bg-base-bg/95 backdrop-blur border-b border-base-border">
+        <div className="px-4 sm:px-7 py-3 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 min-w-0">
             <button
               type="button"
-              onClick={handleLogout}
-              className="text-sm text-base-muted hover:text-fg transition whitespace-nowrap"
+              onClick={() => setNavOpen(true)}
+              aria-label="Open menu"
+              className="md:hidden w-9 h-9 -ml-1.5 flex items-center justify-center rounded-lg text-base-muted hover:text-fg transition shrink-0"
             >
-              Sign out
+              <MenuIcon />
+            </button>
+            <h1 className="text-lg font-bold truncate">{PAGE_TITLES[page]}</h1>
+          </div>
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <ThemeToggle />
+            {isPro && analytics && analytics.presaves.length > 0 && (page === "overview" || page === "analytics") && (
+              <button
+                type="button"
+                onClick={exportEmailsCsv}
+                className="hidden sm:inline-flex items-center gap-1.5 bg-base-card border border-base-border hover:border-base-muted transition text-fg font-semibold rounded-lg px-3.5 py-2 text-sm"
+              >
+                ⬇ Export
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => goToPage("smartlinks", formTopRef)}
+              className="bg-brand hover:bg-brand-dark transition text-white font-semibold rounded-lg px-3 sm:px-4 py-2 text-sm whitespace-nowrap"
+            >
+              + <span className="hidden sm:inline">New </span>SmartLink
             </button>
           </div>
         </div>
       </header>
 
-      <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10 space-y-8 sm:space-y-10">
+      <main className="px-4 sm:px-7 py-6 space-y-6">
+        {page === "overview" && (
+          <>
         <InstallAppPrompt />
+            <DashboardOverview
+              analytics={analytics}
+              links={links}
+              isPro={isPro}
+              freeLimit={FREE_TIER_LINK_LIMIT}
+              ranges={ANALYTICS_RANGES}
+              range={analyticsRange}
+              onRangeChange={setAnalyticsRange}
+              delta={clicksDelta(analytics)}
+              platformMeta={PLATFORM_META}
+              platformFields={PLATFORM_FIELDS}
+              artistName={artistName}
+              onNavigate={goToPage}
+              onShowLinkStats={showLinkStats}
+              onUpgrade={goToBilling}
+            />
+          </>
+        )}
+
+        {page === "releases" && (
+          <ComingSoon icon="◎" title="Releases">
+            Track upcoming, live and draft releases and which distributor each one went through.
+          </ComingSoon>
+        )}
+        {page === "epk" && (
+          <ComingSoon icon="✦" title="Your EPK">
+            A shareable press kit with your bio, photo, stats, platforms and booking contact, for
+            blogs, radio and promoters.
+          </ComingSoon>
+        )}
+        {page === "payouts" && (
+          <ComingSoon icon="₵" title="Payouts">
+            Log royalty payments from each distributor and see your totals and what&apos;s still
+            pending.
+          </ComingSoon>
+        )}
+        {page === "promo" && (
+          <ComingSoon icon="◉" title="Promo Planner">
+            Plan and track your promotional activities across platforms.
+          </ComingSoon>
+        )}
+
+        {page === "settings" && (
+        <>
         {/* ---------------- Billing Component ---------------- */}
-        <section id="billing" className="glass-card rounded-xl2 p-5 sm:p-6 scroll-mt-24">
+        <section id="billing" ref={billingRef} className="glass-card rounded-xl2 p-5 sm:p-6 scroll-mt-20">
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 mb-5">
             <div className="min-w-0">
               <div className="text-xs font-semibold text-base-muted uppercase tracking-wide mb-1">
@@ -807,11 +910,14 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
           )}
         </section>
 
+        </>
+        )}
+
         {/* ---------------- Analytics Panel ---------------- */}
-        <section ref={analyticsRef} className="scroll-mt-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-            <h2 className="text-lg font-bold">Analytics</h2>
-            <div className="flex items-center gap-2 min-w-0">
+        {page === "analytics" && (
+        <section ref={analyticsRef} className="scroll-mt-20">
+          <div className="flex items-center justify-end gap-3 mb-4">
+            <div className="flex items-center gap-2 min-w-0 w-full sm:w-auto">
               <label htmlFor="analytics-link" className="sr-only">
                 SmartLink
               </label>
@@ -984,7 +1090,8 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
                     Upgrade to unlock, view, and export your fan email database.
                   </p>
                   <a
-                    href={UPGRADE_ANCHOR}
+                    href={UPGRADE_HREF}
+                    onClick={goToBilling}
                     className="bg-brand hover:bg-brand-dark transition text-base-bg text-xs font-bold rounded-lg px-4 py-2"
                   >
                     See Plans
@@ -1060,7 +1167,8 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
                   <div className="absolute inset-0 flex flex-col items-center justify-center bg-base-card/85 px-6 text-center">
                     <LockIcon className="text-brand mb-2" />
                     <p className="text-xs text-base-muted max-w-[220px]">
-                      <a href={UPGRADE_ANCHOR} className="text-brand-light hover:text-brand">
+                      <a href={UPGRADE_HREF}
+                    onClick={goToBilling} className="text-brand-light hover:text-brand">
                         Upgrade
                       </a>{" "}
                       to see clicks broken down by every platform.
@@ -1124,7 +1232,8 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
                   <div className="absolute inset-0 flex flex-col items-center justify-center bg-base-card/85 px-6 text-center">
                     <LockIcon className="text-brand mb-2" />
                     <p className="text-xs text-base-muted max-w-[220px]">
-                      <a href={UPGRADE_ANCHOR} className="text-brand-light hover:text-brand">
+                      <a href={UPGRADE_HREF}
+                    onClick={goToBilling} className="text-brand-light hover:text-brand">
                         Upgrade
                       </a>{" "}
                       to see your full country-by-country breakdown.
@@ -1159,9 +1268,11 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
             </div>
           </div>
         </section>
+        )}
 
         {/* ---------------- Create/Edit SmartLink Form ---------------- */}
-        <section className="grid lg:grid-cols-5 gap-6 lg:gap-8" ref={formTopRef}>
+        {page === "smartlinks" && (
+        <section className="grid lg:grid-cols-5 gap-6 lg:gap-8 scroll-mt-20" ref={formTopRef}>
           <form
             onSubmit={handleCreateLink}
             className="lg:col-span-3 glass-card rounded-xl2 p-5 sm:p-6 space-y-6 min-w-0"
@@ -1516,7 +1627,8 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
                   <LockIcon className="text-brand mb-2" />
                   <p className="text-sm font-semibold mb-2">Unlock with a paid plan</p>
                   <a
-                    href={UPGRADE_ANCHOR}
+                    href={UPGRADE_HREF}
+                    onClick={goToBilling}
                     className="bg-brand hover:bg-brand-dark transition text-base-bg text-xs font-bold rounded-lg px-4 py-2"
                   >
                     See Plans
@@ -1638,7 +1750,10 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
             </div>
           </div>
         </section>
+        )}
 
+        {page === "settings" && (
+        <>
         {/* ---------------- Custom Domain ---------------- */}
         {isPro && (
           <section className="glass-card rounded-xl2 p-5 sm:p-6">
@@ -1779,11 +1894,14 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
             </button>
           </form>
         </section>
+        </>
+        )}
 
         <footer className="pt-4 pb-2">
           <SiteFooter />
         </footer>
       </main>
+      </div>
     </div>
   );
 }
