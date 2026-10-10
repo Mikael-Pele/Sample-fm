@@ -19,6 +19,7 @@ import {
   DroppaFmMark,
 } from "./PlatformIcons";
 import SiteFooter from "./SiteFooter";
+import ClicksChart from "./ClicksChart";
 import InstallAppPrompt from "./InstallAppPrompt";
 import { ReportProblemTrigger } from "./ReportProblemModal";
 import { FREE_TIER_LINK_LIMIT, REGION_PRICING } from "../lib/plans";
@@ -126,15 +127,41 @@ function PlatformInput({ field, value, onChange }) {
   );
 }
 
-function StatTile({ label, value }) {
+function StatTile({ label, value, hint, hintClass = "text-base-muted" }) {
   return (
     <div className="glass-card rounded-xl p-4 sm:p-5 min-w-0">
       <div className="text-base-muted text-xs font-semibold uppercase tracking-wide mb-2 truncate">
         {label}
       </div>
       <div className="text-xl sm:text-2xl font-extrabold text-white truncate">{value}</div>
+      {hint ? <div className={`text-xs font-semibold mt-1.5 truncate ${hintClass}`}>{hint}</div> : null}
     </div>
   );
+}
+
+const ANALYTICS_RANGES = [7, 30, 90];
+
+// "↑ 18% vs prior 30d" — compares the selected range against the
+// same number of days just before it.
+function clicksDelta(analytics) {
+  if (!analytics) return { text: "", className: undefined };
+  const { total_clicks: now, previous_clicks: before, range_days: days } = analytics;
+  if (!before) {
+    return {
+      text: now > 0 ? `New in the last ${days} days` : "",
+      className: "text-emerald-400",
+    };
+  }
+  const pct = Math.round(((now - before) / before) * 100);
+  if (pct === 0) return { text: `Same as prior ${days}d`, className: undefined };
+  return {
+    text: `${pct > 0 ? "↑" : "↓"} ${Math.abs(pct)}% vs prior ${days}d`,
+    className: pct > 0 ? "text-emerald-400" : "text-red-400",
+  };
+}
+
+function platformLabel(key) {
+  return (PLATFORM_META[key] && PLATFORM_META[key].label) || key;
 }
 
 const MAX_ARTWORK_BYTES = 6 * 1024 * 1024; // 6MB, matches the server-side cap
@@ -167,6 +194,10 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
   const fileInputRef = useRef(null);
   const [links, setLinks] = useState([]);
   const [analytics, setAnalytics] = useState(null);
+  const [analyticsRange, setAnalyticsRange] = useState(30);
+  // "" = every SmartLink combined; otherwise one SmartLink's id.
+  const [analyticsLinkId, setAnalyticsLinkId] = useState("");
+  const analyticsRef = useRef(null);
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState("");
   const [createSuccess, setCreateSuccess] = useState("");
@@ -206,17 +237,32 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
   }, []);
 
   const loadAnalytics = useCallback(async () => {
-    const res = await fetch("/api/analytics/summary");
+    const params = new URLSearchParams({ days: String(analyticsRange) });
+    if (analyticsLinkId) params.set("link_id", analyticsLinkId);
+    const res = await fetch(`/api/analytics/summary?${params}`);
     if (res.ok) {
       const data = await res.json();
       setAnalytics(data);
+    } else if (res.status === 404 && analyticsLinkId) {
+      // The filtered SmartLink was deleted — fall back to all links.
+      setAnalyticsLinkId("");
     }
-  }, []);
+  }, [analyticsRange, analyticsLinkId]);
 
   useEffect(() => {
     loadLinks();
+  }, [loadLinks]);
+
+  useEffect(() => {
     loadAnalytics();
-  }, [loadLinks, loadAnalytics]);
+  }, [loadAnalytics]);
+
+  function showLinkStats(linkId) {
+    setAnalyticsLinkId(linkId);
+    if (analyticsRef.current) {
+      analyticsRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
 
   function handleFieldChange(e) {
     const { name, value, type, checked } = e.target;
@@ -748,13 +794,59 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
         </section>
 
         {/* ---------------- Analytics Panel ---------------- */}
-        <section>
-          <h2 className="text-lg font-bold mb-4">Analytics</h2>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
-            <StatTile label="Total Clicks" value={analytics ? analytics.total_clicks : "—"} />
+        <section ref={analyticsRef} className="scroll-mt-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+            <h2 className="text-lg font-bold">Analytics</h2>
+            <div className="flex items-center gap-2 min-w-0">
+              <label htmlFor="analytics-link" className="sr-only">
+                SmartLink
+              </label>
+              <select
+                id="analytics-link"
+                value={analyticsLinkId}
+                onChange={(e) => setAnalyticsLinkId(e.target.value)}
+                className="min-w-0 flex-1 sm:flex-none sm:max-w-[240px] bg-base-bg border border-base-border rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-brand transition"
+              >
+                <option value="">All SmartLinks</option>
+                {links.map((link) => (
+                  <option key={link.id} value={link.id}>
+                    {link.track_title} — {link.artist_name}
+                  </option>
+                ))}
+              </select>
+              <div
+                role="group"
+                aria-label="Date range"
+                className="flex shrink-0 bg-base-bg border border-base-border rounded-lg p-0.5"
+              >
+                {ANALYTICS_RANGES.map((days) => (
+                  <button
+                    key={days}
+                    type="button"
+                    onClick={() => setAnalyticsRange(days)}
+                    aria-pressed={analyticsRange === days}
+                    className={`px-2.5 py-1.5 rounded-md text-xs font-semibold transition ${
+                      analyticsRange === days
+                        ? "bg-brand text-base-bg"
+                        : "text-base-muted hover:text-white"
+                    }`}
+                  >
+                    {days}d
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4">
+            <StatTile
+              label={`Clicks (${analyticsRange}d)`}
+              value={analytics ? analytics.total_clicks.toLocaleString() : "—"}
+              hint={clicksDelta(analytics).text}
+              hintClass={clicksDelta(analytics).className}
+            />
             <StatTile
               label="Top Platform"
-              value={analytics && analytics.top_platform ? analytics.top_platform : "—"}
+              value={analytics && analytics.top_platform ? platformLabel(analytics.top_platform) : "—"}
             />
             <StatTile
               label="Top Country"
@@ -764,6 +856,70 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
               label="Pre-Saves Collected"
               value={analytics ? analytics.presave_count : "—"}
             />
+          </div>
+
+          {/* ---------------- Clicks over time + top SmartLinks ---------------- */}
+          <div className={`grid gap-4 mb-6 ${analyticsLinkId ? "" : "lg:grid-cols-3"}`}>
+            <div className="glass-card rounded-xl2 overflow-hidden min-w-0 lg:col-span-2">
+              <div className="px-4 sm:px-5 py-4 border-b border-base-border font-semibold text-sm">
+                Clicks over the last {analyticsRange} days
+              </div>
+              <div className="px-3 sm:px-4 pt-4 pb-2">
+                {analytics ? (
+                  <ClicksChart daily={analytics.daily} />
+                ) : (
+                  <div className="h-[180px]" />
+                )}
+                {analytics && analytics.total_clicks === 0 && (
+                  <p className="text-xs text-base-muted text-center pb-2">
+                    No clicks in this period yet. Share your SmartLink to start seeing fans here.
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {!analyticsLinkId && (
+              <div className="glass-card rounded-xl2 overflow-hidden min-w-0">
+                <div className="px-4 sm:px-5 py-4 border-b border-base-border font-semibold text-sm">
+                  Top SmartLinks
+                </div>
+                <div className="px-4 sm:px-5 py-2">
+                  {analytics && analytics.link_breakdown.length > 0 ? (
+                    analytics.link_breakdown.slice(0, 5).map((row) => {
+                      const max = analytics.link_breakdown[0].count || 1;
+                      return (
+                        <button
+                          key={row.link_id}
+                          type="button"
+                          onClick={() => showLinkStats(row.link_id)}
+                          className="w-full flex items-center gap-3 py-2.5 border-b border-base-border/60 last:border-b-0 text-left group"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <div className="text-sm font-semibold truncate group-hover:text-brand-light transition">
+                              {row.track_title}
+                            </div>
+                            <div className="text-xs text-base-muted truncate">/{row.slug}</div>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <div className="text-sm font-bold tabular-nums">
+                              {row.count.toLocaleString()}
+                            </div>
+                            <div className="w-14 h-1 rounded-full bg-base-bg overflow-hidden mt-1">
+                              <div
+                                className="h-full bg-brand"
+                                style={{ width: `${Math.max(6, Math.round((row.count / max) * 100))}%` }}
+                              />
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })
+                  ) : (
+                    <p className="text-sm text-base-muted text-center py-6">No clicks yet.</p>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="glass-card rounded-xl2 overflow-hidden relative">
@@ -907,6 +1063,7 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
                       };
                       const max = analytics.platform_breakdown[0].count || 1;
                       const pct = Math.max(6, Math.round((row.count / max) * 100));
+                      const share = Math.round((row.count / (analytics.total_clicks || 1)) * 100);
                       return (
                         <div key={row.platform} className="flex items-center gap-2">
                           <span className="text-xs w-28 shrink-0 text-base-muted truncate">
@@ -918,8 +1075,11 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
                               style={{ width: `${pct}%` }}
                             />
                           </div>
-                          <span className="text-xs font-semibold text-white w-8 text-right shrink-0">
+                          <span className="text-xs font-semibold text-white w-8 text-right shrink-0 tabular-nums">
                             {row.count}
+                          </span>
+                          <span className="text-xs text-base-muted w-9 text-right shrink-0 tabular-nums">
+                            {share}%
                           </span>
                         </div>
                       );
@@ -1397,14 +1557,21 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 mt-2 text-xs text-base-muted flex-wrap">
-                      <span>{link._count?.analytics ?? 0} clicks</span>
-                      <span>{link._count?.presaves ?? 0} pre-saves</span>
-                      {link.is_presave && (
-                        <span className="text-amber-400 font-semibold">PRE-SAVE</span>
-                      )}
-                    </div>
                   </a>
+                  <div className="flex items-center gap-3 mt-2 text-xs text-base-muted flex-wrap">
+                    <span>{link._count?.analytics ?? 0} clicks</span>
+                    <span>{link._count?.presaves ?? 0} pre-saves</span>
+                    {link.is_presave && (
+                      <span className="text-amber-400 font-semibold">PRE-SAVE</span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => showLinkStats(link.id)}
+                      className="ml-auto font-semibold text-brand-light hover:text-brand transition"
+                    >
+                      View stats ↗
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

@@ -87,6 +87,9 @@ model Analytics {
 
   @@map("analytics")
   @@index([link_id])
+  // Serves the dashboard's date-ranged queries (clicks over time). Created
+  // by prisma/sql/2026-10-09_analytics_link_clicked_at_index.sql.
+  @@index([link_id, clicked_at])
 }
 
 model Presave {
