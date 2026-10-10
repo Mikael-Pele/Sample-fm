@@ -420,7 +420,7 @@ export default function SmartLinkPage({ smartlink, isAfricanFan, fanCountry, own
           >
             <DroppaFmMark />
             Powered by <span className="font-semibold text-fg">Droppa.fm</span> — Create Your
-            Own Free Artist SmartLink
+            Own Artist SmartLink
           </a>
         )}
 
