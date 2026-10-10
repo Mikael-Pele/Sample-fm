@@ -31,7 +31,7 @@ export default function TermsPage() {
               Droppa.fm lets creators build a single SmartLink page linking out to their music and creativity
               across streaming platforms, collect fan pre-saves, and view click analytics. New
               accounts start with a 14-day free trial, after which a paid yearly plan
-              (Droppa.fm Pro) is required to create or edit SmartLinks.
+              (Droppa.fm Artist) is required to create or edit SmartLinks.
             </p>
           </section>
 
@@ -77,7 +77,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-fg font-bold text-lg mb-2">7. Billing</h2>
             <p>
-              Droppa.fm Pro is billed once a year through Paystack, in Ghana cedis. Each payment
+              Droppa.fm Artist is billed once a year through Paystack, in Ghana cedis. Each payment
               covers one year and does not renew automatically. Fees are non-refundable except
               where required by law or described in our Refund &amp; Cancellation Policy. If you
               don&apos;t renew, access continues until the end of the year you paid for.

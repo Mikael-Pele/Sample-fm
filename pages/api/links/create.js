@@ -37,7 +37,7 @@ export default async function handler(req, res) {
     // out, existing SmartLinks stay live but new ones need a subscription.
     if (!hasFullAccess(user)) {
       return res.status(402).json({
-        error: "Your free trial has ended. Subscribe to Droppa.fm Pro to create new SmartLinks.",
+        error: "Your free trial has ended. Subscribe to Droppa.fm Artist to create new SmartLinks.",
         code: "subscription_required",
       });
     }

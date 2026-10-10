@@ -8,10 +8,10 @@ const FAQS = [
   },
   {
     q: "Is there a free plan?",
-    a: "Every new account gets a 14-day free trial with everything unlocked, and no card is needed to start. After that, Droppa.fm Pro is one yearly plan. If you don't subscribe, your existing SmartLinks stay live, but you'll need a subscription to create or edit links and to see your full analytics and fan emails.",
+    a: "Every new account gets a 14-day free trial with everything unlocked, and no card is needed to start. After that, Droppa.fm Artist is one yearly plan. If you don't subscribe, your existing SmartLinks stay live, but you'll need a subscription to create or edit links and to see your full analytics and fan emails.",
   },
   {
-    q: "How much does Droppa.fm Pro cost?",
+    q: "How much does Droppa.fm Artist cost?",
     a: "$49 a year, the same price for everyone wherever you are. It's charged in Ghana cedis (GH₵550) through Paystack, and your bank converts it if your card is in another currency. This is a founding-artist price: if you join now, you keep it for as long as you stay subscribed.",
   },
   {
@@ -20,11 +20,11 @@ const FAQS = [
   },
   {
     q: "Does it renew automatically, and can I cancel?",
-    a: "Your plan covers one year from the day you pay and doesn't renew automatically, so there's nothing to cancel. If you don't pay again, Pro features stay active until the end of the year you paid for. See our Refund & Cancellation Policy for full details.",
+    a: "Your plan covers one year from the day you pay and doesn't renew automatically, so there's nothing to cancel. If you don't pay again, your plan stays active until the end of the year you paid for. See our Refund & Cancellation Policy for full details.",
   },
   {
     q: "Can I use my own domain or ad pixels?",
-    a: "Custom domains, Facebook and TikTok pixels, and team logins for managers and labels are coming soon to Pro. Until then, your droppa.fm/yourname link works everywhere.",
+    a: "Custom domains, Facebook and TikTok pixels, and team logins for managers and labels are coming soon. Until then, your droppa.fm/yourname link works everywhere.",
   },
   {
     q: "What happens to fan data I collect through pre-saves?",

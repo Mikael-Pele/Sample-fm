@@ -21,7 +21,7 @@ export default function RefundPolicyPage() {
             <h2 className="text-fg font-bold text-lg mb-2">1. What we sell</h2>
             <p>
               Droppa.fm is a digital subscription service, not a physical product. There is no
-              shipping or physical delivery — access to Droppa.fm Pro (unlimited SmartLinks, full
+              shipping or physical delivery — access to Droppa.fm Artist (unlimited SmartLinks, full
               analytics, fan email exports, and branding removal) is granted instantly to your account the moment your payment is confirmed by Paystack.
             </p>
           </section>
@@ -30,7 +30,7 @@ export default function RefundPolicyPage() {
             <h2 className="text-fg font-bold text-lg mb-2">2. Billing cycle</h2>
             <p>
               Every new account starts with a 14-day free trial, with no payment needed. After
-              that, Droppa.fm Pro costs $49 a year, charged as GH&#8373;550 through Paystack. Each
+              that, Droppa.fm Artist costs $49 a year, charged as GH&#8373;550 through Paystack. Each
               payment covers one year from the day you pay. It does not renew automatically: you
               choose whether to pay again when the year is up.
             </p>
@@ -40,7 +40,7 @@ export default function RefundPolicyPage() {
             <h2 className="text-fg font-bold text-lg mb-2">3. Cancellations</h2>
             <p>
               Because nothing renews automatically, there is nothing to cancel. If you don&apos;t
-              pay again, you keep full Pro access until the end of the year you already paid
+              pay again, you keep full access until the end of the year you already paid
               for. After that, your SmartLinks stay live for fans, but you won&apos;t be able to
               create or edit links, or see your full analytics and fan emails, until you
               subscribe again.
@@ -50,7 +50,7 @@ export default function RefundPolicyPage() {
           <section>
             <h2 className="text-fg font-bold text-lg mb-2">4. Refunds</h2>
             <p>
-              Because Pro access is granted immediately on payment, subscription fees are
+              Because Artist plan access is granted immediately on payment, subscription fees are
               generally non-refundable. The exceptions are: a duplicate or accidental charge, a
               charge that occurred due to a verified technical error on our end, or where a refund
               is required by applicable law. To request one, use the &quot;Report a problem&quot;
@@ -63,7 +63,7 @@ export default function RefundPolicyPage() {
           <section>
             <h2 className="text-fg font-bold text-lg mb-2">5. Failed or disputed payments</h2>
             <p>
-              If a payment fails or is disputed with your card issuer, Pro access is not
+              If a payment fails or is disputed with your card issuer, Artist plan access is not
               granted (or is suspended if already active) until the payment is resolved.
             </p>
           </section>

@@ -98,7 +98,7 @@ async function handleUpdate(req, res) {
     // but editing needs an active trial or subscription.
     if (!hasFullAccess(user)) {
       return res.status(402).json({
-        error: "Your free trial has ended. Subscribe to Droppa.fm Pro to edit your SmartLinks.",
+        error: "Your free trial has ended. Subscribe to Droppa.fm Artist to edit your SmartLinks.",
         code: "subscription_required",
       });
     }

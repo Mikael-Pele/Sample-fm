@@ -31,7 +31,7 @@ export default async function handler(req, res) {
 
     if (!user.is_pro) {
       return res.status(403).json({
-        error: "Custom domains are a Pro feature. Subscribe to unlock this field.",
+        error: "Custom domains are a paid feature. Subscribe to unlock this field.",
       });
     }
 

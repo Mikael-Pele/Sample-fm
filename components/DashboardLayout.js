@@ -22,10 +22,35 @@ export const DASHBOARD_NAV = [
   },
   {
     section: "Money",
-    items: [
-      { key: "payouts", label: "Payouts", icon: "₵" },
-      { key: "promo", label: "Promo Planner", icon: "◉" },
-    ],
+    items: [{ key: "payouts", label: "Payouts", icon: "₵" }],
+  },
+];
+
+// The Business tier's pages. They stay visible in the sidebar with a PRO
+// tag, but open an upgrade modal instead of a page until that plan exists.
+export const BUSINESS_FEATURES = [
+  {
+    key: "brandhub",
+    label: "Brand Hub",
+    icon: "▣",
+    summary: "A public page for the companies and brands you run.",
+    description:
+      "List your companies and brands with a logo, category, description and link, on a public page at droppa.fm/yourbrand.",
+  },
+  {
+    key: "merch",
+    label: "Merch Store",
+    icon: "▤",
+    summary: "Sell merch with Paystack checkout. You ship the orders.",
+    description:
+      "List your merch and take payment through Paystack checkout. Orders come to you to fulfil yourself.",
+  },
+  {
+    key: "promo",
+    label: "Promo Planner",
+    icon: "◉",
+    summary: "Plan and track promotion for every release.",
+    description: "Plan your promotional activity across platforms and track what's been done for each release.",
   },
 ];
 
@@ -54,6 +79,7 @@ export function DashboardSidebar({
   planLabel,
   isPro,
   onLogout,
+  onLockedFeature,
 }) {
   return (
     <>
@@ -109,6 +135,28 @@ export function DashboardSidebar({
               })}
             </div>
           ))}
+
+          <div>
+            <div className="px-5 pt-3.5 pb-1.5 text-[10px] font-bold uppercase tracking-[0.15em] text-base-muted">
+              For Business
+            </div>
+            {BUSINESS_FEATURES.map((item) => (
+              <button
+                key={item.key}
+                type="button"
+                onClick={() => onLockedFeature(item.key)}
+                className="w-full flex items-center gap-2.5 px-5 py-2 text-sm border-l-2 border-transparent text-base-muted font-medium hover:text-fg hover:bg-base-bg transition text-left"
+              >
+                <span className="w-5 text-center text-base" aria-hidden="true">
+                  {item.icon}
+                </span>
+                {item.label}
+                <span className="ml-auto text-[9px] font-extrabold uppercase tracking-wide border border-brand text-brand rounded px-1.5 py-px">
+                  Pro
+                </span>
+              </button>
+            ))}
+          </div>
         </nav>
 
         <div className="border-t border-base-border px-5 py-4 space-y-3">

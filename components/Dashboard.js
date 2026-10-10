@@ -24,11 +24,14 @@ import ClicksChart from "./ClicksChart";
 import DashboardOverview, { StatTile } from "./DashboardOverview";
 import {
   DashboardSidebar,
-  ComingSoon,
   MenuIcon,
   PAGE_TITLES,
 } from "./DashboardLayout";
 import InstallAppPrompt from "./InstallAppPrompt";
+import ReleasesPage from "./ReleasesPage";
+import PayoutsPage from "./PayoutsPage";
+import EpkEditor from "./EpkEditor";
+import BusinessUpgradeModal from "./BusinessUpgradeModal";
 import { ReportProblemTrigger } from "./ReportProblemModal";
 import { COMING_SOON_FEATURES, PLAN, PLAN_PRICE_GHS } from "../lib/plans";
 
@@ -46,7 +49,7 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "";
 const UPGRADE_HREF = "/dashboard?page=settings#billing";
 
 const ACCESS_LABEL = {
-  active: "Pro",
+  active: "Artist plan",
   trial: "Free trial",
   expired: "Trial ended",
 };
@@ -96,7 +99,7 @@ const PLATFORM_FIELDS = [
   { key: "url_tiktok", label: "TikTok", Icon: TikTokIcon, ring: "focus-within:ring-white" },
 ];
 
-// Display metadata for the per-platform click breakdown (trial or Pro). Keyed
+// Display metadata for the per-platform click breakdown (trial or paid). Keyed
 // by the `platform_clicked` values written by /api/analytics/track.
 const PLATFORM_META = {
   audiomack: { label: "Audiomack", Icon: AudiomackIcon, barClass: "bg-audiomack" },
@@ -200,6 +203,11 @@ export default function Dashboard({ initialUser }) {
   const [manualUrlValue, setManualUrlValue] = useState("");
   const fileInputRef = useRef(null);
   const [links, setLinks] = useState([]);
+  const [releases, setReleases] = useState([]);
+  const [payouts, setPayouts] = useState([]);
+  // Just enough of the EPK for the overview strip; the editor loads the rest.
+  const [epkSummary, setEpkSummary] = useState(null);
+  const [lockedFeature, setLockedFeature] = useState(null);
   const [analytics, setAnalytics] = useState(null);
   const [analyticsRange, setAnalyticsRange] = useState(30);
   // "" = every SmartLink combined; otherwise one SmartLink's id.
@@ -309,6 +317,21 @@ export default function Dashboard({ initialUser }) {
   useEffect(() => {
     loadLinks();
   }, [loadLinks]);
+
+  useEffect(() => {
+    fetch("/api/releases")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => data && setReleases(data.releases || []))
+      .catch(() => {});
+    fetch("/api/payouts")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => data && setPayouts(data.payouts || []))
+      .catch(() => {});
+    fetch("/api/epk")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => data && setEpkSummary({ handle: data.epk.handle, published: data.saved && data.epk.published }))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     loadAnalytics();
@@ -698,6 +721,10 @@ export default function Dashboard({ initialUser }) {
         planLabel={ACCESS_LABEL[accessStatus]}
         isPro={isPro}
         onLogout={handleLogout}
+        onLockedFeature={(key) => {
+          setNavOpen(false);
+          setLockedFeature(key);
+        }}
       />
 
       <div ref={mainRef} className="relative z-10 flex-1 min-w-0 overflow-y-auto overflow-x-hidden">
@@ -744,7 +771,7 @@ export default function Dashboard({ initialUser }) {
               analytics={analytics}
               links={links}
               linksHint={
-                isPro ? "Unlimited on Pro" : hasAccess ? `Unlimited during trial` : "Subscribe to add more"
+                isPro ? "Unlimited on your plan" : hasAccess ? `Unlimited during trial` : "Subscribe to add more"
               }
               ranges={ANALYTICS_RANGES}
               range={analyticsRange}
@@ -756,31 +783,24 @@ export default function Dashboard({ initialUser }) {
               onNavigate={goToPage}
               onShowLinkStats={showLinkStats}
               onUpgrade={goToBilling}
+              releases={releases}
+              epk={epkSummary}
             />
           </>
         )}
 
         {page === "releases" && (
-          <ComingSoon icon="◎" title="Releases">
-            Track upcoming, live and draft releases and which distributor each one went through.
-          </ComingSoon>
+          <ReleasesPage releases={releases} onChange={setReleases} canEdit={hasAccess} onUpgrade={goToBilling} />
         )}
         {page === "epk" && (
-          <ComingSoon icon="✦" title="Your EPK">
-            A shareable press kit with your bio, photo, stats, platforms and booking contact, for
-            blogs, radio and promoters.
-          </ComingSoon>
+          <EpkEditor
+            canEdit={hasAccess}
+            onUpgrade={goToBilling}
+            onSaved={(epk) => setEpkSummary({ handle: epk.handle, published: epk.published })}
+          />
         )}
         {page === "payouts" && (
-          <ComingSoon icon="₵" title="Payouts">
-            Log royalty payments from each distributor and see your totals and what&apos;s still
-            pending.
-          </ComingSoon>
-        )}
-        {page === "promo" && (
-          <ComingSoon icon="◉" title="Promo Planner">
-            Plan and track your promotional activities across platforms.
-          </ComingSoon>
+          <PayoutsPage payouts={payouts} onChange={setPayouts} canEdit={hasAccess} onUpgrade={goToBilling} />
         )}
 
         {page === "settings" && (
@@ -852,13 +872,13 @@ export default function Dashboard({ initialUser }) {
           )}
 
           <div className="mt-5 text-xs text-base-muted">
-            <span className="font-semibold text-fg">Coming soon to Pro:</span>{" "}
+            <span className="font-semibold text-fg">Coming soon:</span>{" "}
             {COMING_SOON_FEATURES.join(", ")}.
           </div>
 
           {isPro && (
             <div className="mt-6 pt-6 border-t border-base-border flex flex-wrap items-center gap-x-5 gap-y-2 text-xs">
-              <span className="font-semibold text-fg">Pro support</span>
+              <span className="font-semibold text-fg">Priority support</span>
               <a
                 href={`tel:${PREMIUM_SUPPORT_PHONE_DISPLAY.replace(/\s+/g, "")}`}
                 className="text-base-muted hover:text-fg transition"
@@ -1114,7 +1134,7 @@ export default function Dashboard({ initialUser }) {
             )}
           </div>
 
-          {/* ---------------- Full Platform & Country Breakdown (trial or Pro) ---------------- */}
+          {/* ---------------- Full Platform & Country Breakdown (trial or paid) ---------------- */}
           <div className="grid sm:grid-cols-2 gap-4 mt-4">
             <div className="glass-card rounded-xl2 overflow-hidden relative">
               <div className="px-4 sm:px-5 py-4 border-b border-base-border font-semibold text-sm">
@@ -1796,6 +1816,7 @@ export default function Dashboard({ initialUser }) {
         </footer>
       </main>
       </div>
+      <BusinessUpgradeModal featureKey={lockedFeature} onClose={() => setLockedFeature(null)} />
     </div>
   );
 }
