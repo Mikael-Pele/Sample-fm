@@ -1,9 +1,11 @@
 import prisma from "../../../lib/prisma";
 import { getSessionFromRequest } from "../../../lib/auth";
+import { CUSTOM_DOMAINS_ENABLED } from "../../../lib/plans";
 
-// Custom domains are a Premium-only feature. Free-tier users attempting to
-// set one are rejected outright — never silently stored, never partially
-// applied.
+// Custom domains are a paid feature that isn't finished yet (DNS setup still
+// needs the site owner's Vercel project), so it's switched off for everyone
+// and shown as "coming soon" in the dashboard. Requests are rejected
+// outright — never silently stored, never partially applied.
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     res.setHeader("Allow", ["POST"]);
@@ -17,6 +19,10 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: "You must be signed in." });
     }
 
+    if (!CUSTOM_DOMAINS_ENABLED) {
+      return res.status(403).json({ error: "Custom domains are coming soon." });
+    }
+
     const user = await prisma.user.findUnique({ where: { id: session.userId } });
 
     if (!user) {
@@ -25,7 +31,7 @@ export default async function handler(req, res) {
 
     if (!user.is_pro) {
       return res.status(403).json({
-        error: "Custom domains are a Premium feature. Upgrade to unlock this field.",
+        error: "Custom domains are a Pro feature. Subscribe to unlock this field.",
       });
     }
 

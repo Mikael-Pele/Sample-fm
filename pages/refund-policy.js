@@ -21,36 +21,36 @@ export default function RefundPolicyPage() {
             <h2 className="text-fg font-bold text-lg mb-2">1. What we sell</h2>
             <p>
               Droppa.fm is a digital subscription service, not a physical product. There is no
-              shipping or physical delivery — access to Premium features (unlimited SmartLinks,
-              retargeting pixels, custom domains, fan email exports, and branding removal) is
-              granted instantly to your account the moment your payment is confirmed by Paystack.
+              shipping or physical delivery — access to Droppa.fm Pro (unlimited SmartLinks, full
+              analytics, fan email exports, and branding removal) is granted instantly to your account the moment your payment is confirmed by Paystack.
             </p>
           </section>
 
           <section>
             <h2 className="text-fg font-bold text-lg mb-2">2. Billing cycle</h2>
             <p>
-              Premium is billed either monthly or yearly, depending on the plan you choose at
-              checkout. Your subscription automatically renews at the end of each billing period
-              unless you cancel before it renews.
+              Every new account starts with a 14-day free trial, with no payment needed. After
+              that, Droppa.fm Pro costs $49 a year, charged as GH&#8373;550 through Paystack. Each
+              payment covers one year from the day you pay. It does not renew automatically: you
+              choose whether to pay again when the year is up.
             </p>
           </section>
 
           <section>
             <h2 className="text-fg font-bold text-lg mb-2">3. Cancellations</h2>
             <p>
-              You can cancel your Premium subscription at any time from your dashboard. When you
-              cancel, you keep full Premium access until the end of the billing period you already
-              paid for — we don&apos;t cut you off immediately. Your account then reverts to the
-              free tier, and any SmartLinks beyond the free-tier limit remain saved but inactive
-              until you either delete them or resubscribe.
+              Because nothing renews automatically, there is nothing to cancel. If you don&apos;t
+              pay again, you keep full Pro access until the end of the year you already paid
+              for. After that, your SmartLinks stay live for fans, but you won&apos;t be able to
+              create or edit links, or see your full analytics and fan emails, until you
+              subscribe again.
             </p>
           </section>
 
           <section>
             <h2 className="text-fg font-bold text-lg mb-2">4. Refunds</h2>
             <p>
-              Because Premium access is granted immediately on payment, subscription fees are
+              Because Pro access is granted immediately on payment, subscription fees are
               generally non-refundable. The exceptions are: a duplicate or accidental charge, a
               charge that occurred due to a verified technical error on our end, or where a refund
               is required by applicable law. To request one, use the &quot;Report a problem&quot;
@@ -63,7 +63,7 @@ export default function RefundPolicyPage() {
           <section>
             <h2 className="text-fg font-bold text-lg mb-2">5. Failed or disputed payments</h2>
             <p>
-              If a payment fails or is disputed with your card issuer, Premium access is not
+              If a payment fails or is disputed with your card issuer, Pro access is not
               granted (or is suspended if already active) until the payment is resolved.
             </p>
           </section>

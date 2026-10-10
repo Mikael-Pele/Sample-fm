@@ -8,23 +8,23 @@ const FAQS = [
   },
   {
     q: "Is there a free plan?",
-    a: "Yes. The free tier includes up to 3 SmartLinks with basic analytics. Premium unlocks unlimited SmartLinks, retargeting pixels, custom domains, fan email exports, and removes Droppa.fm branding from your pages.",
+    a: "Every new account gets a 14-day free trial with everything unlocked, and no card is needed to start. After that, Droppa.fm Pro is one yearly plan. If you don't subscribe, your existing SmartLinks stay live, but you'll need a subscription to create or edit links and to see your full analytics and fan emails.",
   },
   {
-    q: "How much does Premium cost?",
-    a: "Pricing is shown on the homepage and adjusts automatically based on your region so it stays affordable in the markets we serve.",
+    q: "How much does Droppa.fm Pro cost?",
+    a: "$49 a year, the same price for everyone wherever you are. It's charged in Ghana cedis (GH₵550) through Paystack, and your bank converts it if your card is in another currency. This is a founding-artist price: if you join now, you keep it for as long as you stay subscribed.",
   },
   {
     q: "How do I pay, and is it secure?",
     a: "All paid plans are billed through Paystack, a licensed payment processor. Your card details are entered directly on Paystack's secure checkout — Droppa.fm never sees or stores them.",
   },
   {
-    q: "Can I cancel anytime?",
-    a: "Yes. You can cancel from your dashboard at any time. Your Premium features stay active until the end of the billing period you already paid for. See our Refund & Cancellation Policy for full details.",
+    q: "Does it renew automatically, and can I cancel?",
+    a: "Your plan covers one year from the day you pay and doesn't renew automatically, so there's nothing to cancel. If you don't pay again, Pro features stay active until the end of the year you paid for. See our Refund & Cancellation Policy for full details.",
   },
   {
-    q: "Do I need a custom domain?",
-    a: "No — it's optional and only available on Premium. Most creators just use their free droppa.fm/yourname link and it works fine.",
+    q: "Can I use my own domain or ad pixels?",
+    a: "Custom domains, Facebook and TikTok pixels, and team logins for managers and labels are coming soon to Pro. Until then, your droppa.fm/yourname link works everywhere.",
   },
   {
     q: "What happens to fan data I collect through pre-saves?",

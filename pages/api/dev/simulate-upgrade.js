@@ -1,6 +1,6 @@
 import prisma from "../../../lib/prisma";
 import { getSessionFromRequest } from "../../../lib/auth";
-import { computeExpiryFromNow } from "../../../lib/plans";
+import { computeExpiryFromNow, getAccessStatus, trialEndsAt, PLAN } from "../../../lib/plans";
 
 // DEVELOPER TESTING ONLY.
 // Mirrors what /api/paystack-webhook would do on a real charge.success
@@ -28,7 +28,7 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: "You must be signed in." });
     }
 
-    const { is_pro, billing_interval, region } = req.body || {};
+    const { is_pro } = req.body || {};
 
     let data;
     if (!is_pro) {
@@ -40,14 +40,12 @@ export default async function handler(req, res) {
         pricing_region: null,
       };
     } else {
-      const chosenInterval = billing_interval === "yearly" ? "yearly" : "monthly";
-      const chosenRegion = region === "africa" ? "africa" : "global";
       data = {
         is_pro: true,
         plan: "premium",
-        billing_interval: chosenInterval,
-        plan_expires_at: computeExpiryFromNow(chosenInterval),
-        pricing_region: chosenRegion,
+        billing_interval: PLAN.interval,
+        plan_expires_at: computeExpiryFromNow(),
+        pricing_region: null,
       };
     }
 
@@ -65,6 +63,9 @@ export default async function handler(req, res) {
         billing_interval: updatedUser.billing_interval,
         pricing_region: updatedUser.pricing_region,
         custom_domain: updatedUser.custom_domain,
+        plan_expires_at: updatedUser.plan_expires_at ? updatedUser.plan_expires_at.toISOString() : null,
+        access_status: getAccessStatus(updatedUser),
+        trial_ends_at: trialEndsAt(updatedUser).toISOString(),
       },
     });
   } catch (err) {

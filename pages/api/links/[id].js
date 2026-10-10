@@ -1,6 +1,6 @@
 import prisma from "../../../lib/prisma";
 import { getSessionFromRequest } from "../../../lib/auth";
-import { ensurePlanCurrent } from "../../../lib/plans";
+import { ensurePlanCurrent, hasFullAccess, PIXELS_ENABLED } from "../../../lib/plans";
 import { findPreviewUrl } from "../../../lib/previewLookup";
 import {
   validateCoreFields,
@@ -94,6 +94,15 @@ async function handleUpdate(req, res) {
       return res.status(404).json({ error: "SmartLink not found." });
     }
 
+    // Expired accounts keep their links live (and can still delete them),
+    // but editing needs an active trial or subscription.
+    if (!hasFullAccess(user)) {
+      return res.status(402).json({
+        error: "Your free trial has ended. Subscribe to Droppa.fm Pro to edit your SmartLinks.",
+        code: "subscription_required",
+      });
+    }
+
     const payload = req.body || {};
 
     const core = validateCoreFields(payload);
@@ -114,7 +123,7 @@ async function handleUpdate(req, res) {
       is_presave,
     } = core;
 
-    const { pixel_fb, pixel_tiktok, droppedFields } = resolveProOnlyFields(payload, user.is_pro);
+    const { pixel_fb, pixel_tiktok, droppedFields } = resolveProOnlyFields(payload, PIXELS_ENABLED);
 
     // ---- Custom vanity slug ------------------------------------------
     // Unlike creation, leaving this blank on an edit means "don't touch
@@ -194,7 +203,7 @@ async function handleUpdate(req, res) {
 
     return res.status(200).json({
       smartlink,
-      tier: user.is_pro ? "premium" : "free",
+      tier: user.is_pro ? "premium" : "trial",
       dropped_fields: droppedFields,
       share_url: `${process.env.NEXT_PUBLIC_APP_URL || ""}/${smartlink.slug}`,
     });

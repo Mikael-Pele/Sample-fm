@@ -78,7 +78,7 @@ export default function PermissionsPage() {
               <div className="font-semibold text-sm mb-1">Marketing &amp; retargeting</div>
               <p className="text-sm text-base-muted">
                 Some creators may add their own Facebook or TikTok retargeting pixels to their
-                SmartLinks (a Premium feature). This setting controls whether those third-party
+                SmartLinks (a Pro feature, coming soon). This setting controls whether those third-party
                 pixels are allowed to run when you visit a SmartLink page.
               </p>
             </div>

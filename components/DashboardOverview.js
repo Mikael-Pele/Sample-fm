@@ -38,8 +38,7 @@ function Card({ title, action, onAction, children, className = "" }) {
 export default function DashboardOverview({
   analytics,
   links,
-  isPro,
-  freeLimit,
+  linksHint,
   ranges,
   range,
   onRangeChange,
@@ -76,7 +75,7 @@ export default function DashboardOverview({
         <StatTile
           label="Active SmartLinks"
           value={links.length}
-          hint={isPro ? "Unlimited on Premium" : `${links.length}/${freeLimit} on Free`}
+          hint={linksHint}
         />
         <StatTile label="Pre-Saves" value={analytics ? analytics.presave_count : "—"} />
         <StatTile
@@ -126,7 +125,7 @@ export default function DashboardOverview({
                   onClick={onUpgrade}
                   className="text-brand-light hover:text-brand font-semibold"
                 >
-                  Upgrade
+                  Subscribe
                 </button>{" "}
                 to see which platforms your fans pick.
               </p>

@@ -55,8 +55,6 @@ export default async function handler(req, res) {
 
     const updatedUser = await grantPremium(prisma, {
       email: customer && customer.email,
-      region: matched.region,
-      billing_interval: matched.billing_interval,
     });
 
     // Only let this endpoint confirm an upgrade for the person who's
@@ -68,7 +66,6 @@ export default async function handler(req, res) {
     return res.status(200).json({
       success: true,
       plan: updatedUser.plan,
-      region: updatedUser.pricing_region,
       billing_interval: updatedUser.billing_interval,
     });
   } catch (err) {

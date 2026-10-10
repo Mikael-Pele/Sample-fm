@@ -1,6 +1,6 @@
 import prisma from "../../../lib/prisma";
 import { getSessionFromRequest } from "../../../lib/auth";
-import { ensurePlanCurrent } from "../../../lib/plans";
+import { ensurePlanCurrent, hasFullAccess } from "../../../lib/plans";
 
 // Aggregates click + pre-save data across every SmartLink owned by the
 // signed-in creator (or a single one of them, via ?link_id=), for the
@@ -59,6 +59,7 @@ export default async function handler(req, res) {
     // checked — there's no cron, so this is checked wherever tier gating
     // actually matters.
     user = await ensurePlanCurrent(prisma, user);
+    const unlocked = hasFullAccess(user);
 
     const requestedDays = parseInt(req.query.days, 10);
     const days = ALLOWED_RANGES.includes(requestedDays) ? requestedDays : DEFAULT_RANGE;
@@ -94,8 +95,8 @@ export default async function handler(req, res) {
         top_country: null,
         presave_count: 0,
         presaves: [],
-        presaves_locked: !user.is_pro,
-        breakdown_locked: !user.is_pro,
+        presaves_locked: !unlocked,
+        breakdown_locked: !unlocked,
         platform_breakdown: [],
         country_breakdown: [],
       });
@@ -144,8 +145,8 @@ export default async function handler(req, res) {
       }),
       prisma.presave.count({ where: { link_id: { in: linkIds } } }),
       // Only ever fetch the raw rows (including fan_email) when the
-      // account is confirmed Premium server-side.
-      user.is_pro
+      // account has an active trial or subscription.
+      unlocked
         ? prisma.presave.findMany({
             where: { link_id: { in: linkIds } },
             orderBy: { created_at: "desc" },
@@ -191,8 +192,8 @@ export default async function handler(req, res) {
       top_platform,
       top_country,
       presave_count: presaveCount,
-      presaves_locked: !user.is_pro,
-      presaves: user.is_pro
+      presaves_locked: !unlocked,
+      presaves: unlocked
         ? rawPresaves.map((p) => ({
             id: p.id,
             fan_email: p.fan_email,
@@ -205,12 +206,12 @@ export default async function handler(req, res) {
             slug: p.link.slug,
           }))
         : [],
-      // Full per-platform / per-country breakdown is Premium-only. Free
-      // tier still gets top_platform/top_country above (the single winner),
-      // just not the complete ranked list.
-      breakdown_locked: !user.is_pro,
-      platform_breakdown: user.is_pro ? platform_breakdown : [],
-      country_breakdown: user.is_pro ? country_breakdown : [],
+      // Full per-platform / per-country breakdown needs a trial or paid
+      // plan. Expired accounts still get top_platform/top_country above
+      // (the single winner), just not the complete ranked list.
+      breakdown_locked: !unlocked,
+      platform_breakdown: unlocked ? platform_breakdown : [],
+      country_breakdown: unlocked ? country_breakdown : [],
     });
   } catch (err) {
     console.error("[/api/analytics/summary] error:", err);

@@ -30,9 +30,9 @@ import {
 } from "./DashboardLayout";
 import InstallAppPrompt from "./InstallAppPrompt";
 import { ReportProblemTrigger } from "./ReportProblemModal";
-import { FREE_TIER_LINK_LIMIT, REGION_PRICING } from "../lib/plans";
+import { COMING_SOON_FEATURES, PLAN, PLAN_PRICE_GHS } from "../lib/plans";
 
-// Shown only to Premium subscribers as a direct line for support — a perk
+// Shown only to paying subscribers as a direct line for support — a perk
 // of paying, not something free-tier users see.
 const PREMIUM_SUPPORT_PHONE_DISPLAY = "+64 635253254";
 const PREMIUM_SUPPORT_WHATSAPP_URL = "https://wa.me/64635253254";
@@ -45,10 +45,15 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "";
 // the plan picker in the billing panel rather than guessing.
 const UPGRADE_HREF = "/dashboard?page=settings#billing";
 
-const PLAN_DISPLAY = {
-  free: "Free",
-  premium: "Premium",
+const ACCESS_LABEL = {
+  active: "Pro",
+  trial: "Free trial",
+  expired: "Trial ended",
 };
+
+function formatLongDate(iso) {
+  return new Date(iso).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+}
 
 const EMPTY_FORM = {
   artist_name: "",
@@ -91,7 +96,7 @@ const PLATFORM_FIELDS = [
   { key: "url_tiktok", label: "TikTok", Icon: TikTokIcon, ring: "focus-within:ring-white" },
 ];
 
-// Display metadata for the per-platform click breakdown (Premium). Keyed
+// Display metadata for the per-platform click breakdown (trial or Pro). Keyed
 // by the `platform_clicked` values written by /api/analytics/track.
 const PLATFORM_META = {
   audiomack: { label: "Audiomack", Icon: AudiomackIcon, barClass: "bg-audiomack" },
@@ -184,7 +189,7 @@ function nextArtworkItemId() {
   return `art-${Date.now()}-${artworkItemSeq}`;
 }
 
-export default function Dashboard({ initialUser, pricingRegion: detectedRegion }) {
+export default function Dashboard({ initialUser }) {
   const router = useRouter();
   const [user, setUser] = useState(initialUser);
   const [form, setForm] = useState(EMPTY_FORM);
@@ -209,14 +214,7 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
   // instead of POST.
   const [editingId, setEditingId] = useState(null);
   const formTopRef = useRef(null);
-  const [customDomainInput, setCustomDomainInput] = useState(user?.custom_domain || "");
-  const [domainSaving, setDomainSaving] = useState(false);
-  const [domainError, setDomainError] = useState("");
   const [deletingId, setDeletingId] = useState(null);
-  const [billingInterval, setBillingInterval] = useState("monthly");
-  // Auto-detected from IP geo, but a visitor can override it (VPNs, travel,
-  // misdetection) — a quiet toggle, not a big region picker.
-  const [pricingRegion, setPricingRegion] = useState(detectedRegion === "africa" ? "africa" : "global");
   const [upgradeLoading, setUpgradeLoading] = useState(false);
   const [upgradeError, setUpgradeError] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
@@ -228,7 +226,15 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
   const [resendLoading, setResendLoading] = useState(false);
   const [resendMessage, setResendMessage] = useState("");
 
-  const isPro = Boolean(user?.is_pro);
+  // Paid = on the yearly plan. hasAccess = paid or still inside the free
+  // trial; expired accounts keep their live links but can't create or edit.
+  const accessStatus = user?.access_status || "expired";
+  const isPro = accessStatus === "active";
+  const hasAccess = accessStatus !== "expired";
+  const trialDaysLeft =
+    accessStatus === "trial" && user?.trial_ends_at
+      ? Math.max(1, Math.ceil((new Date(user.trial_ends_at).getTime() - Date.now()) / 86400000))
+      : 0;
 
   // Which dashboard page is showing lives in ?page= so it survives reloads
   // and the back button. Unknown values fall back to the overview.
@@ -547,7 +553,7 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
       const res = await fetch("/api/billing/initialize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ region: pricingRegion, billing_interval: billingInterval }),
+        body: JSON.stringify({}),
       });
       const data = await res.json();
 
@@ -568,7 +574,7 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
     const res = await fetch("/api/dev/simulate-upgrade", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ is_pro: !isPro, billing_interval: "monthly" }),
+      body: JSON.stringify({ is_pro: !isPro }),
     });
     if (res.ok) {
       const data = await res.json();
@@ -597,29 +603,6 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
       window.alert("Network error while deleting this SmartLink.");
     } finally {
       setDeletingId(null);
-    }
-  }
-
-  async function handleSaveDomain(e) {
-    e.preventDefault();
-    setDomainError("");
-    setDomainSaving(true);
-    try {
-      const res = await fetch("/api/user/update-domain", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ custom_domain: customDomainInput }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setDomainError(data.error || "Could not save custom domain.");
-      } else {
-        setUser((prev) => ({ ...prev, ...data.user }));
-      }
-    } catch (err) {
-      setDomainError("Network error while saving custom domain.");
-    } finally {
-      setDomainSaving(false);
     }
   }
 
@@ -712,7 +695,7 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
         onClose={() => setNavOpen(false)}
         linkCount={links.length}
         artistName={artistName}
-        planLabel={PLAN_DISPLAY[user?.plan] || (isPro ? "Premium" : "Free")}
+        planLabel={ACCESS_LABEL[accessStatus]}
         isPro={isPro}
         onLogout={handleLogout}
       />
@@ -733,7 +716,7 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
           </div>
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <ThemeToggle />
-            {isPro && analytics && analytics.presaves.length > 0 && (page === "overview" || page === "analytics") && (
+            {hasAccess && analytics && analytics.presaves.length > 0 && (page === "overview" || page === "analytics") && (
               <button
                 type="button"
                 onClick={exportEmailsCsv}
@@ -760,8 +743,9 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
             <DashboardOverview
               analytics={analytics}
               links={links}
-              isPro={isPro}
-              freeLimit={FREE_TIER_LINK_LIMIT}
+              linksHint={
+                isPro ? "Unlimited on Pro" : hasAccess ? `Unlimited during trial` : "Subscribe to add more"
+              }
               ranges={ANALYTICS_RANGES}
               range={analyticsRange}
               onRangeChange={setAnalyticsRange}
@@ -806,23 +790,21 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 mb-5">
             <div className="min-w-0">
               <div className="text-xs font-semibold text-base-muted uppercase tracking-wide mb-1">
-                Account Tier
+                Your Plan
               </div>
               <div className="text-xl sm:text-2xl font-extrabold mb-1">
-                {isPro ? PLAN_DISPLAY[user?.plan] || "Premium" : "Free Tier"}
+                {isPro ? PLAN.name : ACCESS_LABEL[accessStatus]}
               </div>
               <p className="text-sm text-base-muted max-w-md">
                 {isPro
-                  ? `Unlimited SmartLinks, retargeting pixels, custom domains, fan email exports, and zero Droppa.fm branding are unlocked.${
-                      user?.plan_expires_at
-                        ? ` Renews ${new Date(user.plan_expires_at).toLocaleDateString("en-US", {
-                            month: "long",
-                            day: "numeric",
-                            year: "numeric",
-                          })}.`
-                        : ""
+                  ? `Unlimited SmartLinks, full analytics, fan email exports, and no Droppa.fm badge on your links.${
+                      user?.plan_expires_at ? ` Renews ${formatLongDate(user.plan_expires_at)}.` : ""
                     }`
-                  : `Up to ${FREE_TIER_LINK_LIMIT} SmartLinks with the Droppa.fm badge. Upgrade to unlock unlimited links, retargeting pixels, custom domains, and your fan email database.`}
+                  : hasAccess
+                  ? `${trialDaysLeft} day${trialDaysLeft === 1 ? "" : "s"} left of your free trial (ends ${formatLongDate(
+                      user.trial_ends_at
+                    )}). Everything is unlocked until then. Subscribe any time to keep it that way.`
+                  : "Your free trial has ended. Your SmartLinks stay live, but you need a subscription to create or edit links and to see your full analytics and fan emails."}
               </p>
             </div>
             {!IS_PRODUCTION && (
@@ -831,66 +813,52 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
                 onClick={handleSimulateUpgrade}
                 className="shrink-0 text-xs text-base-muted hover:text-brand-light border border-dashed border-base-border hover:border-brand-light rounded-lg px-4 py-2 transition"
               >
-                {isPro ? "[Revert to Free — dev testing]" : "[Simulate Pro upgrade — dev testing]"}
+                {isPro ? "[Cancel paid plan — dev testing]" : "[Simulate payment — dev testing]"}
               </button>
             )}
           </div>
 
           {!isPro && (
-            <div className="space-y-4">
-              <div className="inline-flex rounded-lg bg-base-bg border border-base-border p-1 text-xs font-semibold">
-                <button
-                  type="button"
-                  onClick={() => setBillingInterval("monthly")}
-                  className={`px-3.5 py-1.5 rounded-md transition ${
-                    billingInterval === "monthly" ? "bg-brand text-base-bg" : "text-base-muted hover:text-fg"
-                  }`}
-                >
-                  Monthly
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setBillingInterval("yearly")}
-                  className={`px-3.5 py-1.5 rounded-md transition ${
-                    billingInterval === "yearly" ? "bg-brand text-base-bg" : "text-base-muted hover:text-fg"
-                  }`}
-                >
-                  Yearly <span className="opacity-80">(2 months free)</span>
-                </button>
+            <div className="max-w-sm bg-base-bg border-2 border-brand rounded-xl p-5 flex flex-col">
+              <div className="flex items-center justify-between gap-2 mb-1">
+                <div className="font-bold text-sm">{PLAN.name}</div>
+                <span className="text-[10px] font-bold uppercase tracking-wide text-brand">Founding artist price</span>
               </div>
-
-              <div className="max-w-sm bg-base-bg border-2 border-brand rounded-xl p-5 flex flex-col">
-                <div className="font-bold text-sm mb-1">Premium</div>
-                <div className="text-2xl font-extrabold mb-1">
-                  ${REGION_PRICING[pricingRegion][billingInterval].toFixed(2).replace(/\.00$/, "")}
-                  <span className="text-sm font-medium text-base-muted">
-                    /{billingInterval === "yearly" ? "yr" : "mo"}
-                  </span>
+              <div className="text-2xl font-extrabold mb-0.5">
+                ${PLAN.priceUsd}
+                <span className="text-sm font-medium text-base-muted">/year</span>
+              </div>
+              <div className="text-xs text-base-muted mb-3">
+                Charged as GH&#8373;{PLAN_PRICE_GHS} a year. Locked in for as long as you stay subscribed.
+              </div>
+              <p className="text-xs text-base-muted mb-4 flex-1">
+                Unlimited SmartLinks, full analytics, fan email exports, no Droppa.fm badge.
+              </p>
+              {upgradeError ? (
+                <div className="text-xs text-red-400 bg-red-950/40 border border-red-900 rounded-lg px-3 py-2 mb-3">
+                  {upgradeError}
                 </div>
-                <p className="text-xs text-base-muted mb-4 flex-1">
-                  Unlimited SmartLinks, pixels, custom domain, fan email exports, no branding.
-                </p>
-                {upgradeError ? (
-                  <div className="text-xs text-red-400 bg-red-950/40 border border-red-900 rounded-lg px-3 py-2 mb-3">
-                    {upgradeError}
-                  </div>
-                ) : null}
-                <button
-                  type="button"
-                  onClick={handleUpgradeClick}
-                  disabled={upgradeLoading}
-                  style={{ "--glow-color": "rgba(255, 77, 0, 0.5)" }}
-                  className="w-full shimmer-gold glow-on-hover text-center text-base-bg font-bold rounded-lg py-2.5 text-sm disabled:opacity-60"
-                >
-                  {upgradeLoading ? "Redirecting to checkout…" : "Upgrade to Premium"}
-                </button>
-              </div>
+              ) : null}
+              <button
+                type="button"
+                onClick={handleUpgradeClick}
+                disabled={upgradeLoading}
+                style={{ "--glow-color": "rgba(255, 77, 0, 0.5)" }}
+                className="w-full shimmer-gold glow-on-hover text-center text-base-bg font-bold rounded-lg py-2.5 text-sm disabled:opacity-60"
+              >
+                {upgradeLoading ? "Redirecting to checkout…" : "Subscribe for $" + PLAN.priceUsd + "/year"}
+              </button>
             </div>
           )}
 
+          <div className="mt-5 text-xs text-base-muted">
+            <span className="font-semibold text-fg">Coming soon to Pro:</span>{" "}
+            {COMING_SOON_FEATURES.join(", ")}.
+          </div>
+
           {isPro && (
             <div className="mt-6 pt-6 border-t border-base-border flex flex-wrap items-center gap-x-5 gap-y-2 text-xs">
-              <span className="font-semibold text-fg">Premium support</span>
+              <span className="font-semibold text-fg">Pro support</span>
               <a
                 href={`tel:${PREMIUM_SUPPORT_PHONE_DISPLAY.replace(/\s+/g, "")}`}
                 className="text-base-muted hover:text-fg transition"
@@ -1045,7 +1013,7 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
           <div className="glass-card rounded-xl2 overflow-hidden relative">
             <div className="px-4 sm:px-5 py-4 border-b border-base-border font-semibold text-sm flex items-center justify-between gap-3">
               <span>Fan Emails Collected via Pre-Saves</span>
-              {isPro && analytics && analytics.presaves.length > 0 && (
+              {hasAccess && analytics && analytics.presaves.length > 0 && (
                 <button
                   type="button"
                   onClick={exportEmailsCsv}
@@ -1087,7 +1055,7 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
                     collected
                   </p>
                   <p className="text-sm text-base-muted mb-4 max-w-xs">
-                    Upgrade to unlock, view, and export your fan email database.
+                    Subscribe to unlock, view, and export your fan email database.
                   </p>
                   <a
                     href={UPGRADE_HREF}
@@ -1146,7 +1114,7 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
             )}
           </div>
 
-          {/* ---------------- Full Platform & Country Breakdown (Premium) ---------------- */}
+          {/* ---------------- Full Platform & Country Breakdown (trial or Pro) ---------------- */}
           <div className="grid sm:grid-cols-2 gap-4 mt-4">
             <div className="glass-card rounded-xl2 overflow-hidden relative">
               <div className="px-4 sm:px-5 py-4 border-b border-base-border font-semibold text-sm">
@@ -1169,7 +1137,7 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
                     <p className="text-xs text-base-muted max-w-[220px]">
                       <a href={UPGRADE_HREF}
                     onClick={goToBilling} className="text-brand-light hover:text-brand">
-                        Upgrade
+                        Subscribe
                       </a>{" "}
                       to see clicks broken down by every platform.
                     </p>
@@ -1234,7 +1202,7 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
                     <p className="text-xs text-base-muted max-w-[220px]">
                       <a href={UPGRADE_HREF}
                     onClick={goToBilling} className="text-brand-light hover:text-brand">
-                        Upgrade
+                        Subscribe
                       </a>{" "}
                       to see your full country-by-country breakdown.
                     </p>
@@ -1586,55 +1554,18 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
               </div>
             </div>
 
-            {/* ---------------- Strict 2-Tier Product Gate ---------------- */}
-            <div className="relative">
-              <h3 className="text-sm font-bold mb-3 text-base-muted uppercase tracking-wide">
-                Advanced Retargeting &amp; Branding (Premium)
-              </h3>
-              <div className={`grid sm:grid-cols-2 gap-4 ${!isPro ? "gate-blur" : ""}`}>
-                <div className="min-w-0">
-                  <label className="block text-xs font-semibold text-base-muted mb-1.5">
-                    Facebook Pixel ID
-                  </label>
-                  <input
-                    type="text"
-                    name="pixel_fb"
-                    value={form.pixel_fb}
-                    onChange={handleFieldChange}
-                    disabled={!isPro}
-                    placeholder="1234567890123456"
-                    className="w-full bg-base-bg border border-base-border rounded-lg px-3.5 py-2.5 text-sm outline-none focus:border-brand transition"
-                  />
+            {/* ---------------- Retargeting pixels (coming soon) ---------------- */}
+            <div className="flex items-start gap-3 bg-base-bg border border-dashed border-base-border rounded-lg px-4 py-3">
+              <LockIcon className="text-base-muted mt-0.5 shrink-0" />
+              <div className="min-w-0">
+                <div className="text-sm font-semibold">
+                  Facebook &amp; TikTok Pixels{" "}
+                  <span className="ml-1 text-[10px] font-bold uppercase tracking-wide text-brand">Coming soon</span>
                 </div>
-                <div className="min-w-0">
-                  <label className="block text-xs font-semibold text-base-muted mb-1.5">
-                    TikTok Pixel ID
-                  </label>
-                  <input
-                    type="text"
-                    name="pixel_tiktok"
-                    value={form.pixel_tiktok}
-                    onChange={handleFieldChange}
-                    disabled={!isPro}
-                    placeholder="C4A1B2C3D4E5F6G7H8I9"
-                    className="w-full bg-base-bg border border-base-border rounded-lg px-3.5 py-2.5 text-sm outline-none focus:border-brand transition"
-                  />
-                </div>
+                <p className="text-xs text-base-muted mt-0.5">
+                  Retarget fans who tap your SmartLinks with ads on Facebook, Instagram and TikTok.
+                </p>
               </div>
-
-              {!isPro && (
-                <div className="absolute inset-0 top-8 flex flex-col items-center justify-center bg-base-card/75 rounded-xl border border-dashed border-base-border animate-fade-in px-4 text-center">
-                  <LockIcon className="text-brand mb-2" />
-                  <p className="text-sm font-semibold mb-2">Unlock with a paid plan</p>
-                  <a
-                    href={UPGRADE_HREF}
-                    onClick={goToBilling}
-                    className="bg-brand hover:bg-brand-dark transition text-base-bg text-xs font-bold rounded-lg px-4 py-2"
-                  >
-                    See Plans
-                  </a>
-                </div>
-              )}
             </div>
 
             {createError && (
@@ -1649,8 +1580,7 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
             )}
             {droppedFieldsNotice.length > 0 && (
               <div className="text-sm text-amber-400 bg-amber-950/40 border border-amber-900 rounded-lg px-3 py-2">
-                Free tier: {droppedFieldsNotice.join(", ")} were not saved. Upgrade to Premium to
-                enable them.
+                {droppedFieldsNotice.join(", ")} were not saved. Pixels are coming soon.
               </div>
             )}
 
@@ -1673,10 +1603,14 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
           <div className="lg:col-span-2 glass-card rounded-xl2 p-5 sm:p-6 min-w-0">
             <div className="flex items-center justify-between gap-3 mb-4">
               <h2 className="text-lg font-bold">Your SmartLinks</h2>
-              {!isPro && (
-                <span className="text-xs text-base-muted shrink-0">
-                  {links.length}/{FREE_TIER_LINK_LIMIT} used
-                </span>
+              {!hasAccess && (
+                <a
+                  href={UPGRADE_HREF}
+                  onClick={goToBilling}
+                  className="text-xs font-semibold text-brand-light hover:text-brand shrink-0"
+                >
+                  Subscribe to add or edit links
+                </a>
               )}
             </div>
             <div className="space-y-3 max-h-[640px] overflow-y-auto pr-1">
@@ -1755,57 +1689,17 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
         {page === "settings" && (
         <>
         {/* ---------------- Custom Domain ---------------- */}
-        {isPro && (
-          <section className="glass-card rounded-xl2 p-5 sm:p-6">
-            <h2 className="text-lg font-bold mb-4">Custom Domain</h2>
-            <form
-              onSubmit={handleSaveDomain}
-              className="flex flex-col sm:flex-row gap-3 items-start sm:items-end"
-            >
-              <div className="flex-1 w-full min-w-0">
-                <label className="block text-xs font-semibold text-base-muted mb-1.5">
-                  Custom Domain
-                </label>
-                <input
-                  type="text"
-                  value={customDomainInput}
-                  onChange={(e) => setCustomDomainInput(e.target.value)}
-                  placeholder="links.myartistbrand.com"
-                  className="w-full bg-base-bg border border-base-border rounded-lg px-3.5 py-2.5 text-sm outline-none focus:border-brand transition"
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={domainSaving}
-                className="w-full sm:w-auto bg-base-card border border-base-border hover:border-brand transition text-fg font-semibold rounded-lg px-5 py-2.5 text-sm disabled:opacity-60"
-              >
-                {domainSaving ? "Saving…" : "Save Domain"}
-              </button>
-            </form>
-            {domainError && <p className="text-sm text-red-400 mt-2">{domainError}</p>}
-            {user?.custom_domain ? (
-              <div className="mt-4 pt-4 border-t border-base-border text-xs text-base-muted space-y-1.5">
-                <p className="font-semibold text-fg">Two one-time steps to finish setup:</p>
-                <p>
-                  1. At your domain registrar, point <span className="text-fg">{user.custom_domain}</span>{" "}
-                  at this app — add a CNAME record with value{" "}
-                  <code className="text-brand-light">cname.vercel-dns.com</code> (or, for a root/apex domain,
-                  an A record to <code className="text-brand-light">76.76.21.21</code>).
-                </p>
-                <p>
-                  2. Add <span className="text-fg">{user.custom_domain}</span> under Settings → Domains in
-                  the Vercel project this site is deployed on. Vercel will confirm once DNS is detected — that
-                  step can&rsquo;t be done from here, since only the site&rsquo;s owner has access to that
-                  project.
-                </p>
-                <p>
-                  Once both are done, visiting {user.custom_domain} will automatically land on your most
-                  recent SmartLink.
-                </p>
-              </div>
-            ) : null}
-          </section>
-        )}
+        <section className="glass-card rounded-xl2 p-5 sm:p-6">
+          <h2 className="text-lg font-bold mb-1">
+            Custom Domain{" "}
+            <span className="ml-1 align-middle text-[10px] font-bold uppercase tracking-wide text-brand">
+              Coming soon
+            </span>
+          </h2>
+          <p className="text-sm text-base-muted">
+            Put your SmartLinks on your own domain, like links.yourname.com, instead of droppa.fm.
+          </p>
+        </section>
 
         {/* ---------------- Account Settings ---------------- */}
         <section className="glass-card rounded-xl2 p-5 sm:p-6">

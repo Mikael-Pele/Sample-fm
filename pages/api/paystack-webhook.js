@@ -73,7 +73,7 @@ export default async function handler(req, res) {
       return res.status(200).json({ received: true, ignored: true, reason: "no_amount" });
     }
 
-    // Map the amount actually charged back to Premium monthly or yearly. An
+    // Check the amount actually charged matches the yearly plan. An
     // amount that doesn't match anything we sell is ignored rather than
     // granting access on a guess.
     const matched = matchPlanByAmount(amountPaid);
@@ -86,8 +86,6 @@ export default async function handler(req, res) {
 
     const updatedUser = await grantPremium(prisma, {
       email: customerEmail,
-      region: matched.region,
-      billing_interval: matched.billing_interval,
     });
 
     if (!updatedUser) {
@@ -97,7 +95,7 @@ export default async function handler(req, res) {
 
     console.log(
       `[/api/paystack-webhook] SUCCESS: user ${updatedUser.email} upgraded to ${matched.plan} ` +
-        `(${matched.region} pricing, ${matched.billing_interval}). Paystack reference: ${
+        `(${matched.billing_interval}). Paystack reference: ${
           paystackReference || "n/a"
         }`
     );
@@ -107,7 +105,6 @@ export default async function handler(req, res) {
       upgraded: true,
       user_id: updatedUser.id,
       plan: updatedUser.plan,
-      region: updatedUser.pricing_region,
       billing_interval: updatedUser.billing_interval,
       reference: paystackReference || null,
     });
