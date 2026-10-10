@@ -26,7 +26,7 @@ export default function BillingCallback() {
 
   useEffect(() => {
     if (status !== "success") return;
-    const timer = setTimeout(() => router.push("/dashboard#billing"), 1800);
+    const timer = setTimeout(() => router.push("/dashboard?page=settings#billing"), 1800);
     return () => clearTimeout(timer);
   }, [status, router]);
 
@@ -61,7 +61,7 @@ export default function BillingCallback() {
             </p>
             <button
               type="button"
-              onClick={() => router.push("/dashboard#billing")}
+              onClick={() => router.push("/dashboard?page=settings#billing")}
               className="bg-brand hover:bg-brand-dark transition text-white font-semibold rounded-lg px-5 py-2.5 text-sm"
             >
               Back to dashboard
