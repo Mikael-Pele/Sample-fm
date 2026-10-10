@@ -51,6 +51,7 @@ model SmartLink {
   url_pandora     String?
   url_iheartradio String?
   url_whatsapp    String? // WhatsApp Channel link, e.g. https://whatsapp.com/channel/xxxx
+  url_tiktok      String? // TikTok profile or sound page
 
   // Auto-sourced 5-second audio preview (see lib/previewLookup.js). Both
   // null when no matching preview could be found — the fan page simply
@@ -63,6 +64,11 @@ model SmartLink {
   // actually lives (Instagram, a WhatsApp Channel, a Discord, etc).
   community_url   String?
   community_label String?
+
+  // "Business & Bookings" button for promoters, brands and press. Either a
+  // mailto: link (when the artist entered an email) or an http(s) URL.
+  booking_url     String?
+  booking_label   String?
 
   // Premium-only fields — sanitized/dropped server-side for free-tier users
   pixel_fb       String?
