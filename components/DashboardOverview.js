@@ -1,6 +1,7 @@
 import ClicksChart from "./ClicksChart";
 import { initialsFor } from "./DashboardLayout";
 import { StatusPill, formatReleaseDate } from "./ReleasesPage";
+import { rangeDescription } from "./RangePicker";
 
 export function StatTile({ label, value, hint, hintClass = "text-base-muted" }) {
   return (
@@ -80,7 +81,7 @@ export default function DashboardOverview({
     <div className="space-y-6">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <StatTile
-          label={`Clicks (${range}d)`}
+          label={`Clicks (${analytics ? analytics.range_days : range}d)`}
           value={analytics ? analytics.total_clicks.toLocaleString() : "—"}
           hint={delta.text}
           hintClass={delta.className}
@@ -103,9 +104,9 @@ export default function DashboardOverview({
 
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="glass-card rounded-xl2 overflow-hidden min-w-0 lg:col-span-2">
-          <div className="flex items-center justify-between gap-3 px-4 sm:px-5 py-3 border-b border-base-border">
-            <h2 className="font-bold text-sm">Link Clicks — Last {range} Days</h2>
-            <div role="group" aria-label="Date range" className="flex shrink-0">
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-4 sm:px-5 py-3 border-b border-base-border">
+            <h2 className="font-bold text-sm">Link Clicks {rangeDescription(analytics, range)}</h2>
+            <div role="group" aria-label="Date range" className="flex flex-wrap shrink-0">
               {ranges.map((days) => (
                 <button
                   key={days}
@@ -121,6 +122,20 @@ export default function DashboardOverview({
                   {days}d
                 </button>
               ))}
+              {/* The date pickers live on the Analytics page. */}
+              <button
+                type="button"
+                onClick={() => {
+                  onRangeChange("custom");
+                  onNavigate("analytics");
+                }}
+                aria-pressed={range === "custom"}
+                className={`px-2.5 py-1.5 text-xs font-semibold border-b-2 transition ${
+                  range === "custom" ? "border-brand text-fg" : "border-transparent text-base-muted hover:text-fg"
+                }`}
+              >
+                Custom
+              </button>
             </div>
           </div>
           <div className="px-3 sm:px-4 pt-4 pb-2">

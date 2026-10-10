@@ -32,6 +32,7 @@ import ReleasesPage from "./ReleasesPage";
 import PayoutsPage from "./PayoutsPage";
 import EpkEditor from "./EpkEditor";
 import BusinessUpgradeModal from "./BusinessUpgradeModal";
+import RangePicker, { rangeDescription } from "./RangePicker";
 import { ReportProblemTrigger } from "./ReportProblemModal";
 import { COMING_SOON_FEATURES, PLAN, PLAN_PRICE_GHS } from "../lib/plans";
 
@@ -149,7 +150,7 @@ function PlatformInput({ field, value, onChange }) {
   );
 }
 
-const ANALYTICS_RANGES = [7, 30, 90];
+const ANALYTICS_RANGES = [7, 30, 90, 120, 365];
 
 // "↑ 18% vs prior 30d" — compares the selected range against the
 // same number of days just before it.
@@ -209,7 +210,10 @@ export default function Dashboard({ initialUser }) {
   const [epkSummary, setEpkSummary] = useState(null);
   const [lockedFeature, setLockedFeature] = useState(null);
   const [analytics, setAnalytics] = useState(null);
+  // A number of days, or "custom" to use customRange ({ from, to }).
   const [analyticsRange, setAnalyticsRange] = useState(30);
+  const [customRange, setCustomRange] = useState(null);
+  const [rangeError, setRangeError] = useState("");
   // "" = every SmartLink combined; otherwise one SmartLink's id.
   const [analyticsLinkId, setAnalyticsLinkId] = useState("");
   const analyticsRef = useRef(null);
@@ -302,17 +306,25 @@ export default function Dashboard({ initialUser }) {
   }, []);
 
   const loadAnalytics = useCallback(async () => {
-    const params = new URLSearchParams({ days: String(analyticsRange) });
+    // "Custom" with no dates applied yet keeps showing the last result.
+    if (analyticsRange === "custom" && !customRange) return;
+    const params = new URLSearchParams(
+      analyticsRange === "custom" ? customRange : { days: String(analyticsRange) }
+    );
     if (analyticsLinkId) params.set("link_id", analyticsLinkId);
     const res = await fetch(`/api/analytics/summary?${params}`);
     if (res.ok) {
       const data = await res.json();
       setAnalytics(data);
+      setRangeError("");
+    } else if (res.status === 400) {
+      const data = await res.json().catch(() => ({}));
+      setRangeError(data.error || "That date range didn't work.");
     } else if (res.status === 404 && analyticsLinkId) {
       // The filtered SmartLink was deleted — fall back to all links.
       setAnalyticsLinkId("");
     }
-  }, [analyticsRange, analyticsLinkId]);
+  }, [analyticsRange, customRange, analyticsLinkId]);
 
   useEffect(() => {
     loadLinks();
@@ -904,8 +916,8 @@ export default function Dashboard({ initialUser }) {
         {/* ---------------- Analytics Panel ---------------- */}
         {page === "analytics" && (
         <section ref={analyticsRef} className="scroll-mt-20">
-          <div className="flex items-center justify-end gap-3 mb-4">
-            <div className="flex items-center gap-2 min-w-0 w-full sm:w-auto">
+          <div className="flex items-start justify-end gap-3 mb-4">
+            <div className="flex flex-col sm:flex-row sm:items-start gap-2 min-w-0 w-full sm:w-auto">
               <label htmlFor="analytics-link" className="sr-only">
                 SmartLink
               </label>
@@ -922,32 +934,19 @@ export default function Dashboard({ initialUser }) {
                   </option>
                 ))}
               </select>
-              <div
-                role="group"
-                aria-label="Date range"
-                className="flex shrink-0 bg-base-bg border border-base-border rounded-lg p-0.5"
-              >
-                {ANALYTICS_RANGES.map((days) => (
-                  <button
-                    key={days}
-                    type="button"
-                    onClick={() => setAnalyticsRange(days)}
-                    aria-pressed={analyticsRange === days}
-                    className={`px-2.5 py-1.5 rounded-md text-xs font-semibold transition ${
-                      analyticsRange === days
-                        ? "bg-brand text-base-bg"
-                        : "text-base-muted hover:text-fg"
-                    }`}
-                  >
-                    {days}d
-                  </button>
-                ))}
-              </div>
+              <RangePicker
+                ranges={ANALYTICS_RANGES}
+                range={analyticsRange}
+                onRangeChange={setAnalyticsRange}
+                customRange={customRange}
+                onCustomRangeChange={setCustomRange}
+                error={rangeError}
+              />
             </div>
           </div>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4">
             <StatTile
-              label={`Clicks (${analyticsRange}d)`}
+              label={`Clicks (${analytics ? analytics.range_days : analyticsRange}d)`}
               value={analytics ? analytics.total_clicks.toLocaleString() : "—"}
               hint={clicksDelta(analytics).text}
               hintClass={clicksDelta(analytics).className}
@@ -970,7 +969,7 @@ export default function Dashboard({ initialUser }) {
           <div className={`grid gap-4 mb-6 ${analyticsLinkId ? "" : "lg:grid-cols-3"}`}>
             <div className="glass-card rounded-xl2 overflow-hidden min-w-0 lg:col-span-2">
               <div className="px-4 sm:px-5 py-4 border-b border-base-border font-semibold text-sm">
-                Clicks over the last {analyticsRange} days
+                Clicks {rangeDescription(analytics, analyticsRange)}
               </div>
               <div className="px-3 sm:px-4 pt-4 pb-2">
                 {analytics ? (

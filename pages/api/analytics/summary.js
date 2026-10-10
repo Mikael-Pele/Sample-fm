@@ -5,7 +5,8 @@ import { ensurePlanCurrent, hasFullAccess } from "../../../lib/plans";
 // Aggregates click + pre-save data across every SmartLink owned by the
 // signed-in creator (or a single one of them, via ?link_id=), for the
 // Dashboard's Analytics Panel. Click numbers cover the last ?days= days
-// (7, 30 or 90; default 30), bucketed by UTC day:
+// (7, 30, 90, 120 or 365; default 30), or a custom ?from=&to= range of
+// YYYY-MM-DD dates (inclusive, up to 366 days), bucketed by UTC day:
 //   - Clicks in range + previous-period comparison, daily clicks series,
 //     clicks per SmartLink, single Top Platform, single Top Country (FREE)
 //   - Full per-platform / per-country breakdown (PREMIUM ONLY)
@@ -16,9 +17,35 @@ import { ensurePlanCurrent, hasFullAccess } from "../../../lib/plans";
 // detailed arrays are never included in the JSON response for them. This
 // is enforced here, server-side, not just hidden in the UI, so a free-tier
 // user inspecting network traffic cannot recover the locked data.
-const ALLOWED_RANGES = [7, 30, 90];
+const ALLOWED_RANGES = [7, 30, 90, 120, 365];
 const DEFAULT_RANGE = 30;
+const MAX_CUSTOM_DAYS = 366;
 const DAY_MS = 24 * 60 * 60 * 1000;
+
+function parseIsoDay(value) {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+  const date = new Date(`${value}T00:00:00.000Z`);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+// Resolves the query to { rangeStart, days } (start of the first UTC day,
+// and how many days through the last one), or { error }.
+function resolveRange(query) {
+  const today = startOfUtcDay(new Date());
+  if (query.from || query.to) {
+    const from = parseIsoDay(query.from);
+    let to = parseIsoDay(query.to);
+    if (!from || !to) return { error: "Pick a start and end date." };
+    if (to > today) to = today;
+    if (from > to) return { error: "The start date has to be before the end date." };
+    const days = Math.round((to - from) / DAY_MS) + 1;
+    if (days > MAX_CUSTOM_DAYS) return { error: "Pick a range of a year or less." };
+    return { rangeStart: from, days, custom: true };
+  }
+  const requestedDays = parseInt(query.days, 10);
+  const days = ALLOWED_RANGES.includes(requestedDays) ? requestedDays : DEFAULT_RANGE;
+  return { rangeStart: new Date(today.getTime() - (days - 1) * DAY_MS), days, custom: false };
+}
 
 function startOfUtcDay(date) {
   return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
@@ -61,8 +88,18 @@ export default async function handler(req, res) {
     user = await ensurePlanCurrent(prisma, user);
     const unlocked = hasFullAccess(user);
 
-    const requestedDays = parseInt(req.query.days, 10);
-    const days = ALLOWED_RANGES.includes(requestedDays) ? requestedDays : DEFAULT_RANGE;
+    const range = resolveRange(req.query);
+    if (range.error) {
+      return res.status(400).json({ error: range.error });
+    }
+    const { rangeStart, days } = range;
+    const rangeEnd = new Date(rangeStart.getTime() + days * DAY_MS); // exclusive
+    const rangeMeta = {
+      range_days: days,
+      range_start: rangeStart.toISOString().slice(0, 10),
+      range_end: new Date(rangeEnd.getTime() - DAY_MS).toISOString().slice(0, 10),
+      range_custom: range.custom,
+    };
     const requestedLinkId = typeof req.query.link_id === "string" ? req.query.link_id : "";
 
     const userLinks = await prisma.smartLink.findMany({
@@ -78,14 +115,13 @@ export default async function handler(req, res) {
 
     const linkIds = requestedLinkId ? [requestedLinkId] : userLinks.map((l) => l.id);
 
-    // The range ends with today (UTC) inclusive; the previous period is the
-    // same number of days immediately before it.
-    const rangeStart = new Date(startOfUtcDay(new Date()).getTime() - (days - 1) * DAY_MS);
+    // The previous period is the same number of days immediately before
+    // the selected range.
     const previousStart = new Date(rangeStart.getTime() - days * DAY_MS);
 
     if (linkIds.length === 0) {
       return res.status(200).json({
-        range_days: days,
+        ...rangeMeta,
         link_id: requestedLinkId || null,
         total_clicks: 0,
         previous_clicks: 0,
@@ -102,7 +138,7 @@ export default async function handler(req, res) {
       });
     }
 
-    const clicksInRange = { link_id: { in: linkIds }, clicked_at: { gte: rangeStart } };
+    const clicksInRange = { link_id: { in: linkIds }, clicked_at: { gte: rangeStart, lt: rangeEnd } };
 
     const [
       totalClicks,
@@ -121,7 +157,7 @@ export default async function handler(req, res) {
       prisma.$queryRaw`
         SELECT date_trunc('day', clicked_at AT TIME ZONE 'UTC') AS day, COUNT(*)::int AS count
         FROM analytics
-        WHERE link_id = ANY(${linkIds}::uuid[]) AND clicked_at >= ${rangeStart}
+        WHERE link_id = ANY(${linkIds}::uuid[]) AND clicked_at >= ${rangeStart} AND clicked_at < ${rangeEnd}
         GROUP BY 1
         ORDER BY 1
       `,
@@ -183,7 +219,7 @@ export default async function handler(req, res) {
     const top_country = country_breakdown.length > 0 ? country_breakdown[0].country : null;
 
     return res.status(200).json({
-      range_days: days,
+      ...rangeMeta,
       link_id: requestedLinkId || null,
       total_clicks: totalClicks,
       previous_clicks: previousClicks,
