@@ -244,6 +244,12 @@ export default function Dashboard({ initialUser, price = getLocalPrice(null) }) 
   // trial; expired accounts keep their live links but can't create or edit.
   const accessStatus = user?.access_status || "expired";
   const isPro = accessStatus === "active";
+  // Things a new account still has to do. They show as a count on the
+  // profile icon and as a checklist at the top of Account & Billing.
+  const accountTasks = [
+    ...(user && !user.email_verified ? ["verify"] : []),
+    ...(!isPro ? ["upgrade"] : []),
+  ];
   const hasAccess = accessStatus !== "expired";
   const trialDaysLeft =
     accessStatus === "trial" && user?.trial_ends_at
@@ -734,6 +740,7 @@ export default function Dashboard({ initialUser, price = getLocalPrice(null) }) 
         artistName={artistName}
         planLabel={ACCESS_LABEL[accessStatus]}
         isPro={isPro}
+        notificationCount={accountTasks.length}
         onLogout={handleLogout}
         onLockedFeature={(key) => {
           setNavOpen(false);
@@ -748,10 +755,13 @@ export default function Dashboard({ initialUser, price = getLocalPrice(null) }) 
             <button
               type="button"
               onClick={() => setNavOpen(true)}
-              aria-label="Open menu"
-              className="md:hidden w-9 h-9 -ml-1.5 flex items-center justify-center rounded-lg text-base-muted hover:text-fg transition shrink-0"
+              aria-label={accountTasks.length > 0 ? "Open menu, account needs attention" : "Open menu"}
+              className="relative md:hidden w-9 h-9 -ml-1.5 flex items-center justify-center rounded-lg text-base-muted hover:text-fg transition shrink-0"
             >
               <MenuIcon />
+              {accountTasks.length > 0 && (
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500" aria-hidden="true" />
+              )}
             </button>
             <h1 className="text-lg font-bold truncate">{PAGE_TITLES[page]}</h1>
           </div>
@@ -819,6 +829,60 @@ export default function Dashboard({ initialUser, price = getLocalPrice(null) }) 
 
         {page === "settings" && (
         <>
+        {accountTasks.length > 0 && (
+          <section className="glass-card rounded-xl2 p-5 sm:p-6">
+            <h2 className="text-lg font-bold mb-1">Finish setting up your account</h2>
+            <p className="text-sm text-base-muted mb-4">
+              {accountTasks.length === 1 ? "One thing left to do." : `${accountTasks.length} things left to do.`}
+            </p>
+            <ul className="divide-y divide-base-border border border-base-border rounded-lg">
+              {accountTasks.includes("verify") && (
+                <li className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+                  <div className="min-w-0">
+                    <div className="text-sm font-semibold">Verify your email</div>
+                    <div className="text-xs text-base-muted">
+                      We sent a confirmation link to {user.email}. Verifying keeps your account recoverable.
+                    </div>
+                    {resendMessage && <div className="text-xs text-base-muted mt-1">{resendMessage}</div>}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleResendVerification}
+                    disabled={resendLoading}
+                    className="shrink-0 text-xs font-semibold border border-base-border hover:border-base-muted rounded-lg px-3 py-1.5 transition disabled:opacity-60"
+                  >
+                    {resendLoading ? "Sending…" : "Resend email"}
+                  </button>
+                </li>
+              )}
+              {accountTasks.includes("upgrade") && (
+                <li className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+                  <div className="min-w-0">
+                    <div className="text-sm font-semibold">Upgrade to {PLAN.name}</div>
+                    <div className="text-xs text-base-muted">
+                      {accessStatus === "trial" && trialDaysLeft != null
+                        ? `Your free trial ends in ${trialDaysLeft} day${trialDaysLeft === 1 ? "" : "s"}. `
+                        : accessStatus === "expired"
+                        ? "Your free trial has ended. "
+                        : ""}
+                      Unlimited SmartLinks for {price.approximate ? "about " : ""}
+                      {price.label} a year.
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleUpgradeClick}
+                    disabled={upgradeLoading}
+                    className="shrink-0 text-xs font-bold bg-brand hover:bg-brand-dark text-white rounded-lg px-3 py-1.5 transition disabled:opacity-60"
+                  >
+                    {upgradeLoading ? "Redirecting…" : "Upgrade"}
+                  </button>
+                </li>
+              )}
+            </ul>
+          </section>
+        )}
+
         {/* ---------------- Billing Component ---------------- */}
         <section id="billing" ref={billingRef} className="glass-card rounded-xl2 p-5 sm:p-6 scroll-mt-20">
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 mb-5">
@@ -884,7 +948,7 @@ export default function Dashboard({ initialUser, price = getLocalPrice(null) }) 
                 style={{ "--glow-color": "rgba(255, 77, 0, 0.5)" }}
                 className="w-full shimmer-gold glow-on-hover text-center text-base-bg font-bold rounded-lg py-2.5 text-sm disabled:opacity-60"
               >
-                {upgradeLoading ? "Redirecting to checkout…" : "Subscribe for " + price.label + "/year"}
+                {upgradeLoading ? "Redirecting to checkout…" : (price.approximate ? "Subscribe for a year" : "Subscribe for " + price.label + "/year")}
               </button>
             </div>
           )}

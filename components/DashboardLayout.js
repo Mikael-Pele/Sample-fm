@@ -78,6 +78,7 @@ export function DashboardSidebar({
   artistName,
   planLabel,
   isPro,
+  notificationCount = 0,
   onLogout,
   onLockedFeature,
 }) {
@@ -166,10 +167,18 @@ export function DashboardSidebar({
             className={`w-full flex items-center gap-2.5 text-left rounded-lg -mx-1 px-1 py-1 transition hover:bg-base-bg ${
               page === "settings" ? "bg-base-bg" : ""
             }`}
-            title="Account & billing"
+            title={notificationCount > 0 ? "Account & billing: finish setting up your account" : "Account & billing"}
           >
-            <span className="w-9 h-9 rounded-full bg-gradient-to-br from-brand to-[#ff8c00] flex items-center justify-center text-white text-sm font-extrabold shrink-0">
+            <span className="relative w-9 h-9 rounded-full bg-gradient-to-br from-brand to-[#ff8c00] flex items-center justify-center text-white text-sm font-extrabold shrink-0">
               {initialsFor(artistName)}
+              {notificationCount > 0 && (
+                <span
+                  className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 border-2 border-base-card text-white text-[10px] font-extrabold leading-[14px] text-center"
+                  aria-label={`${notificationCount} account ${notificationCount === 1 ? "task" : "tasks"}`}
+                >
+                  {notificationCount}
+                </span>
+              )}
             </span>
             <span className="min-w-0">
               <span className="block text-sm font-semibold truncate">{artistName}</span>
