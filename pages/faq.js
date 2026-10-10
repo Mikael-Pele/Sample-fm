@@ -38,7 +38,7 @@ const FAQS = [
 
 export default function FaqPage() {
   return (
-    <div className="min-h-screen bg-base-bg text-white">
+    <div className="min-h-screen bg-base-bg text-fg">
       <Head>
         <title>FAQ — Droppa.fm</title>
         <meta
@@ -56,7 +56,7 @@ export default function FaqPage() {
         <div className="space-y-6">
           {FAQS.map((item) => (
             <div key={item.q} className="glass-card rounded-xl p-5">
-              <h2 className="text-white font-bold mb-2">{item.q}</h2>
+              <h2 className="text-fg font-bold mb-2">{item.q}</h2>
               <p className="text-sm leading-relaxed text-base-muted">{item.a}</p>
             </div>
           ))}

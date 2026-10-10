@@ -5,7 +5,7 @@ const EFFECTIVE_DATE = "September 2, 2026";
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen bg-base-bg text-white">
+    <div className="min-h-screen bg-base-bg text-fg">
       <Head>
         <title>Privacy Policy — Droppa.fm</title>
       </Head>
@@ -18,7 +18,7 @@ export default function PrivacyPage() {
 
         <div className="space-y-8 text-sm leading-relaxed text-base-muted">
           <section>
-            <h2 className="text-white font-bold text-lg mb-2">1. What this covers</h2>
+            <h2 className="text-fg font-bold text-lg mb-2">1. What this covers</h2>
             <p>
               This Privacy Policy explains how Droppa.fm (&quot;Droppa.fm&quot;, &quot;we&quot;,
               &quot;us&quot;) collects, uses, and protects information when you use our SmartLink
@@ -28,19 +28,19 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-white font-bold text-lg mb-2">2. Information we collect</h2>
+            <h2 className="text-fg font-bold text-lg mb-2">2. Information we collect</h2>
             <p className="mb-2">
-              <strong className="text-white">Account information.</strong> If you sign up as a
+              <strong className="text-fg">Account information.</strong> If you sign up as a
               creator, we collect your email address and a securely hashed password. We never
               store your password in plain text.
             </p>
             <p className="mb-2">
-              <strong className="text-white">SmartLink content.</strong> Artist names, track
+              <strong className="text-fg">SmartLink content.</strong> Artist names, track
               titles, release dates, cover art, and the streaming platform links you add to your
               SmartLinks.
             </p>
             <p className="mb-2">
-              <strong className="text-white">Fan information.</strong> When a fan submits their
+              <strong className="text-fg">Fan information.</strong> When a fan submits their
               email to pre-save a release, we store that email, the release it relates to, and
               the streaming provider selected, so it can be shared with the creator and used to
               deliver the pre-save. Fans may optionally also provide a phone number, which is
@@ -49,7 +49,7 @@ export default function PrivacyPage() {
               Providing a phone number is always optional.
             </p>
             <p>
-              <strong className="text-white">Usage &amp; analytics data.</strong> When someone
+              <strong className="text-fg">Usage &amp; analytics data.</strong> When someone
               visits or clicks a SmartLink, we log the platform clicked, an approximate country
               (derived from network information, not GPS), and device type. This powers the click
               analytics shown to creators in their dashboard — it is not sold to third parties.
@@ -57,7 +57,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-white font-bold text-lg mb-2">3. How we use information</h2>
+            <h2 className="text-fg font-bold text-lg mb-2">3. How we use information</h2>
             <p>
               We use the information above to operate and improve Droppa.fm: creating and
               displaying SmartLinks, delivering pre-saves, showing creators their own analytics,
@@ -67,7 +67,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-white font-bold text-lg mb-2">4. Payments</h2>
+            <h2 className="text-fg font-bold text-lg mb-2">4. Payments</h2>
             <p>
               Paid subscriptions are processed by Paystack. Droppa.fm does not receive or store
               your full card details — those are handled directly by Paystack under their own
@@ -76,7 +76,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-white font-bold text-lg mb-2">5. Cookies</h2>
+            <h2 className="text-fg font-bold text-lg mb-2">5. Cookies</h2>
             <p>
               We use a single essential cookie to keep creators signed in. We do not currently
               use third-party advertising cookies on Droppa.fm pages themselves. See{" "}
@@ -88,7 +88,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-white font-bold text-lg mb-2">6. Sharing</h2>
+            <h2 className="text-fg font-bold text-lg mb-2">6. Sharing</h2>
             <p>
               We do not sell personal information. Fan emails collected via pre-saves are shared
               only with the creator who owns that SmartLink. We may share information with
@@ -98,7 +98,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-white font-bold text-lg mb-2">7. Data retention &amp; deletion</h2>
+            <h2 className="text-fg font-bold text-lg mb-2">7. Data retention &amp; deletion</h2>
             <p>
               We keep account and SmartLink data for as long as your account is active. Creators
               can permanently delete a SmartLink and its associated analytics at any time from
@@ -108,7 +108,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-white font-bold text-lg mb-2">8. Your rights</h2>
+            <h2 className="text-fg font-bold text-lg mb-2">8. Your rights</h2>
             <p>
               Depending on where you live, you may have rights to access, correct, or delete your
               personal information. Contact us and we will respond as required by applicable law.
@@ -116,7 +116,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-white font-bold text-lg mb-2">9. Changes to this policy</h2>
+            <h2 className="text-fg font-bold text-lg mb-2">9. Changes to this policy</h2>
             <p>
               We may update this policy as Droppa.fm evolves. Material changes will be reflected
               by updating the effective date above.
@@ -124,7 +124,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-white font-bold text-lg mb-2">10. Contact</h2>
+            <h2 className="text-fg font-bold text-lg mb-2">10. Contact</h2>
             <p>Questions about this policy? Reach us via the &quot;Report a problem&quot; link on the site.</p>
           </section>
         </div>

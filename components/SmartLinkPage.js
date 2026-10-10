@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import Head from "next/head";
+import ThemeToggle from "./ThemeToggle";
 import {
   AudiomackIcon,
   BoomplayIcon,
@@ -283,6 +284,7 @@ export default function SmartLinkPage({ smartlink, isAfricanFan, fanCountry, own
       style={bgStyle}
     >
       <div className="light-streaks" aria-hidden="true" />
+      <ThemeToggle className="absolute top-4 right-4 z-20 backdrop-blur" />
       <Head>
         <title>{pageTitle}</title>
         <meta
@@ -346,7 +348,7 @@ export default function SmartLinkPage({ smartlink, isAfricanFan, fanCountry, own
         </div>
 
         <div className="text-center mb-6 min-h-[4.5rem]">
-          <h1 className="text-xl font-extrabold text-white leading-tight break-words">
+          <h1 className="text-xl font-extrabold text-fg leading-tight break-words">
             {smartlink.track_title}
           </h1>
           <p className="text-base-muted text-sm font-medium mt-1 break-words">
@@ -365,10 +367,10 @@ export default function SmartLinkPage({ smartlink, isAfricanFan, fanCountry, own
               key={platform.key}
               type="button"
               onClick={() => handlePlatformClick(platform)}
-              className="w-full flex items-center gap-3 bg-white/[0.03] border border-base-border hover:border-white/25 hover:bg-white/[0.06] rounded-xl px-3.5 sm:px-4 py-3 transition-colors"
+              className="w-full flex items-center gap-3 bg-fg/[0.03] border border-base-border hover:border-fg/25 hover:bg-fg/[0.06] rounded-xl px-3.5 sm:px-4 py-3 transition-colors"
             >
               <platform.Icon />
-              <span className="flex-1 min-w-0 text-left text-sm font-semibold text-white truncate">
+              <span className="flex-1 min-w-0 text-left text-sm font-semibold text-fg truncate">
                 {platform.label}
               </span>
               <span className="text-xs font-medium text-base-muted shrink-0">
@@ -391,7 +393,7 @@ export default function SmartLinkPage({ smartlink, isAfricanFan, fanCountry, own
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => trackClick("community_cta")}
-            className="mt-4 w-full flex items-center justify-center gap-2 border border-base-border hover:border-brand text-white font-semibold text-sm rounded-xl px-4 py-3 transition-colors"
+            className="mt-4 w-full flex items-center justify-center gap-2 border border-base-border hover:border-brand text-fg font-semibold text-sm rounded-xl px-4 py-3 transition-colors"
           >
             <CommunityIcon size={17} />
             {smartlink.community_label || `Join ${smartlink.artist_name}'s community`}
@@ -404,7 +406,7 @@ export default function SmartLinkPage({ smartlink, isAfricanFan, fanCountry, own
             target={smartlink.booking_url.startsWith("mailto:") ? undefined : "_blank"}
             rel="noopener noreferrer"
             onClick={() => trackClick("booking")}
-            className="mt-3 w-full flex items-center justify-center gap-2 border border-base-border hover:border-brand text-white font-semibold text-sm rounded-xl px-4 py-3 transition-colors"
+            className="mt-3 w-full flex items-center justify-center gap-2 border border-base-border hover:border-brand text-fg font-semibold text-sm rounded-xl px-4 py-3 transition-colors"
           >
             <BookingIcon size={17} />
             {smartlink.booking_label || "Business & Bookings"}
@@ -414,10 +416,10 @@ export default function SmartLinkPage({ smartlink, isAfricanFan, fanCountry, own
         {!ownerIsPro && (
           <a
             href="/"
-            className="mt-6 flex flex-wrap items-center justify-center gap-1.5 text-center text-xs text-base-muted hover:text-white transition"
+            className="mt-6 flex flex-wrap items-center justify-center gap-1.5 text-center text-xs text-base-muted hover:text-fg transition"
           >
             <DroppaFmMark />
-            Powered by <span className="font-semibold text-white">Droppa.fm</span> — Create Your
+            Powered by <span className="font-semibold text-fg">Droppa.fm</span> — Create Your
             Own Free Artist SmartLink
           </a>
         )}
@@ -434,14 +436,14 @@ export default function SmartLinkPage({ smartlink, isAfricanFan, fanCountry, own
               type="button"
               onClick={closeModal}
               aria-label="Close"
-              className="absolute top-4 right-4 text-base-muted hover:text-white transition"
+              className="absolute top-4 right-4 text-base-muted hover:text-fg transition"
             >
               ✕
             </button>
 
             {!submitted ? (
               <>
-                <h2 className="text-lg font-bold text-white mb-1 pr-6">
+                <h2 className="text-lg font-bold text-fg mb-1 pr-6">
                   Pre-Save on {pendingPlatform.label}
                 </h2>
                 <p className="text-sm text-base-muted mb-5">
@@ -456,7 +458,7 @@ export default function SmartLinkPage({ smartlink, isAfricanFan, fanCountry, own
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@example.com"
-                    className="w-full bg-base-bg border border-base-border rounded-lg px-3.5 py-2.5 text-sm text-white outline-none focus:border-brand transition"
+                    className="w-full bg-base-bg border border-base-border rounded-lg px-3.5 py-2.5 text-sm text-fg outline-none focus:border-brand transition"
                   />
                   <div>
                     <input
@@ -464,7 +466,7 @@ export default function SmartLinkPage({ smartlink, isAfricanFan, fanCountry, own
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder="+233 24 000 0000 (optional)"
-                      className="w-full bg-base-bg border border-base-border rounded-lg px-3.5 py-2.5 text-sm text-white outline-none focus:border-brand transition"
+                      className="w-full bg-base-bg border border-base-border rounded-lg px-3.5 py-2.5 text-sm text-fg outline-none focus:border-brand transition"
                     />
                     <p className="text-xs text-base-muted mt-1">
                       Optional — so {smartlink.artist_name} can add you to their WhatsApp
@@ -484,7 +486,7 @@ export default function SmartLinkPage({ smartlink, isAfricanFan, fanCountry, own
             ) : (
               <div className="text-center py-4">
                 <div className="text-3xl mb-3">✓</div>
-                <h2 className="text-lg font-bold text-white mb-1">You&apos;re all set!</h2>
+                <h2 className="text-lg font-bold text-fg mb-1">You&apos;re all set!</h2>
                 <p className="text-sm text-base-muted mb-5">
                   We&apos;ll notify {pendingPlatform.label} to deliver {smartlink.track_title}{" "}
                   straight to your library the moment it drops.
@@ -492,7 +494,7 @@ export default function SmartLinkPage({ smartlink, isAfricanFan, fanCountry, own
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="text-sm text-brand-light font-semibold hover:text-white transition"
+                  className="text-sm text-brand-light font-semibold hover:text-fg transition"
                 >
                   Close
                 </button>

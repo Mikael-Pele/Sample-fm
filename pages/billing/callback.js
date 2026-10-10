@@ -31,7 +31,7 @@ export default function BillingCallback() {
   }, [status, router]);
 
   return (
-    <div className="min-h-screen bg-base-bg text-white flex items-center justify-center px-4">
+    <div className="min-h-screen bg-base-bg text-fg flex items-center justify-center px-4">
       <Head>
         <title>Confirming your payment — Droppa.fm</title>
       </Head>

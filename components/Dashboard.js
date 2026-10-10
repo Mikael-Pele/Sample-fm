@@ -21,6 +21,7 @@ import {
   DroppaFmMark,
 } from "./PlatformIcons";
 import SiteFooter from "./SiteFooter";
+import ThemeToggle from "./ThemeToggle";
 import ClicksChart from "./ClicksChart";
 import InstallAppPrompt from "./InstallAppPrompt";
 import { ReportProblemTrigger } from "./ReportProblemModal";
@@ -99,7 +100,7 @@ const PLATFORM_META = {
   pandora: { label: "Pandora", Icon: PandoraIcon, barClass: "bg-pandora" },
   iheartradio: { label: "iHeartRadio", Icon: IHeartRadioIcon, barClass: "bg-iheartradio" },
   whatsapp: { label: "WhatsApp Channel", Icon: WhatsAppIcon, barClass: "bg-whatsapp" },
-  tiktok: { label: "TikTok", Icon: TikTokIcon, barClass: "bg-white" },
+  tiktok: { label: "TikTok", Icon: TikTokIcon, barClass: "bg-fg" },
   booking: { label: "Business & Bookings", Icon: BookingIcon, barClass: "bg-base-muted" },
   community_cta: { label: "Fan Community CTA", Icon: CommunityIcon, barClass: "bg-brand" },
   presave: { label: "Pre-Save Modal", Icon: UploadIcon, barClass: "bg-brand" },
@@ -128,7 +129,7 @@ function PlatformInput({ field, value, onChange }) {
           value={value}
           onChange={onChange}
           placeholder={`https://${label.toLowerCase().replace(/\s/g, "")}.com/...`}
-          className="w-full bg-transparent text-sm text-white outline-none placeholder:text-base-muted/60"
+          className="w-full bg-transparent text-sm text-fg outline-none placeholder:text-base-muted/60"
         />
       </div>
     </div>
@@ -141,7 +142,7 @@ function StatTile({ label, value, hint, hintClass = "text-base-muted" }) {
       <div className="text-base-muted text-xs font-semibold uppercase tracking-wide mb-2 truncate">
         {label}
       </div>
-      <div className="text-xl sm:text-2xl font-extrabold text-white truncate">{value}</div>
+      <div className="text-xl sm:text-2xl font-extrabold text-fg truncate">{value}</div>
       {hint ? <div className={`text-xs font-semibold mt-1.5 truncate ${hintClass}`}>{hint}</div> : null}
     </div>
   );
@@ -664,7 +665,7 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
   }
 
   return (
-    <div className="relative min-h-screen bg-base-bg text-white overflow-x-hidden">
+    <div className="relative min-h-screen bg-base-bg text-fg overflow-x-hidden">
       <div className="light-streaks" aria-hidden="true" />
       <header className="border-b border-base-border sticky top-0 bg-base-bg/95 backdrop-blur z-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-3">
@@ -683,10 +684,11 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
             >
               {PLAN_DISPLAY[user?.plan] || (isPro ? "Pro" : "Free")}
             </span>
+            <ThemeToggle />
             <button
               type="button"
               onClick={handleLogout}
-              className="text-sm text-base-muted hover:text-white transition whitespace-nowrap"
+              className="text-sm text-base-muted hover:text-fg transition whitespace-nowrap"
             >
               Sign out
             </button>
@@ -738,7 +740,7 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
                   type="button"
                   onClick={() => setBillingInterval("monthly")}
                   className={`px-3.5 py-1.5 rounded-md transition ${
-                    billingInterval === "monthly" ? "bg-brand text-base-bg" : "text-base-muted hover:text-white"
+                    billingInterval === "monthly" ? "bg-brand text-base-bg" : "text-base-muted hover:text-fg"
                   }`}
                 >
                   Monthly
@@ -747,7 +749,7 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
                   type="button"
                   onClick={() => setBillingInterval("yearly")}
                   className={`px-3.5 py-1.5 rounded-md transition ${
-                    billingInterval === "yearly" ? "bg-brand text-base-bg" : "text-base-muted hover:text-white"
+                    billingInterval === "yearly" ? "bg-brand text-base-bg" : "text-base-muted hover:text-fg"
                   }`}
                 >
                   Yearly <span className="opacity-80">(2 months free)</span>
@@ -785,10 +787,10 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
 
           {isPro && (
             <div className="mt-6 pt-6 border-t border-base-border flex flex-wrap items-center gap-x-5 gap-y-2 text-xs">
-              <span className="font-semibold text-white">Premium support</span>
+              <span className="font-semibold text-fg">Premium support</span>
               <a
                 href={`tel:${PREMIUM_SUPPORT_PHONE_DISPLAY.replace(/\s+/g, "")}`}
-                className="text-base-muted hover:text-white transition"
+                className="text-base-muted hover:text-fg transition"
               >
                 Call {PREMIUM_SUPPORT_PHONE_DISPLAY}
               </a>
@@ -796,11 +798,11 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
                 href={PREMIUM_SUPPORT_WHATSAPP_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-base-muted hover:text-white transition"
+                className="text-base-muted hover:text-fg transition"
               >
                 WhatsApp
               </a>
-              <ReportProblemTrigger className="text-base-muted hover:text-white transition" />
+              <ReportProblemTrigger className="text-base-muted hover:text-fg transition" />
             </div>
           )}
         </section>
@@ -817,7 +819,7 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
                 id="analytics-link"
                 value={analyticsLinkId}
                 onChange={(e) => setAnalyticsLinkId(e.target.value)}
-                className="min-w-0 flex-1 sm:flex-none sm:max-w-[240px] bg-base-bg border border-base-border rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-brand transition"
+                className="min-w-0 flex-1 sm:flex-none sm:max-w-[240px] bg-base-bg border border-base-border rounded-lg px-3 py-2 text-xs text-fg outline-none focus:border-brand transition"
               >
                 <option value="">All SmartLinks</option>
                 {links.map((link) => (
@@ -840,7 +842,7 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
                     className={`px-2.5 py-1.5 rounded-md text-xs font-semibold transition ${
                       analyticsRange === days
                         ? "bg-brand text-base-bg"
-                        : "text-base-muted hover:text-white"
+                        : "text-base-muted hover:text-fg"
                     }`}
                   >
                     {days}d
@@ -974,7 +976,7 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
                 </div>
                 <div className="absolute inset-0 flex flex-col items-center justify-center bg-base-card/85 px-6 text-center">
                   <LockIcon className="text-brand mb-3" />
-                  <p className="text-sm font-semibold text-white mb-1">
+                  <p className="text-sm font-semibold text-fg mb-1">
                     {analytics.presave_count} pre-save{analytics.presave_count === 1 ? "" : "s"}{" "}
                     collected
                   </p>
@@ -1087,7 +1089,7 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
                               style={{ width: `${pct}%` }}
                             />
                           </div>
-                          <span className="text-xs font-semibold text-white w-8 text-right shrink-0 tabular-nums">
+                          <span className="text-xs font-semibold text-fg w-8 text-right shrink-0 tabular-nums">
                             {row.count}
                           </span>
                           <span className="text-xs text-base-muted w-9 text-right shrink-0 tabular-nums">
@@ -1143,7 +1145,7 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
                           <div className="flex-1 h-2 rounded-full bg-base-bg overflow-hidden">
                             <div className="h-full bg-brand" style={{ width: `${pct}%` }} />
                           </div>
-                          <span className="text-xs font-semibold text-white w-8 text-right shrink-0">
+                          <span className="text-xs font-semibold text-fg w-8 text-right shrink-0">
                             {row.count}
                           </span>
                         </div>
@@ -1172,7 +1174,7 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
                 <button
                   type="button"
                   onClick={handleCancelEdit}
-                  className="text-xs text-base-muted hover:text-white transition shrink-0"
+                  className="text-xs text-base-muted hover:text-fg transition shrink-0"
                 >
                   Cancel edit
                 </button>
@@ -1226,7 +1228,7 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
                   onChange={handleFieldChange}
                   placeholder="catch-the-feeling"
                   maxLength={60}
-                  className="flex-1 min-w-0 bg-transparent text-sm text-white outline-none placeholder:text-base-muted/60"
+                  className="flex-1 min-w-0 bg-transparent text-sm text-fg outline-none placeholder:text-base-muted/60"
                 />
               </div>
               <p className="text-xs text-base-muted mt-1">
@@ -1247,7 +1249,7 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
                 className="cursor-pointer flex flex-col items-center justify-center gap-2 border-2 border-dashed border-base-border hover:border-brand rounded-xl px-4 py-8 text-center transition"
               >
                 <UploadIcon className="text-base-muted" />
-                <p className="text-sm font-semibold text-white">
+                <p className="text-sm font-semibold text-fg">
                   Drag &amp; drop images, or click to browse
                 </p>
                 <p className="text-xs text-base-muted">JPG, PNG, WEBP, or GIF — up to 6MB each</p>
@@ -1328,7 +1330,7 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
                   <button
                     type="button"
                     onClick={addManualUrl}
-                    className="bg-base-card border border-base-border hover:border-brand transition text-white font-semibold rounded-lg px-4 py-2.5 text-sm shrink-0"
+                    className="bg-base-card border border-base-border hover:border-brand transition text-fg font-semibold rounded-lg px-4 py-2.5 text-sm shrink-0"
                   >
                     Add
                   </button>
@@ -1404,7 +1406,7 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
                       value={form.community_url}
                       onChange={handleFieldChange}
                       placeholder="https://instagram.com/youraccount"
-                      className="w-full bg-transparent text-sm text-white outline-none placeholder:text-base-muted/60"
+                      className="w-full bg-transparent text-sm text-fg outline-none placeholder:text-base-muted/60"
                     />
                   </div>
                 </div>
@@ -1420,7 +1422,7 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
                     onChange={handleFieldChange}
                     maxLength={40}
                     placeholder="Join the Nation"
-                    className="w-full bg-transparent text-sm text-white outline-none placeholder:text-base-muted/60"
+                    className="w-full bg-transparent text-sm text-fg outline-none placeholder:text-base-muted/60"
                   />
                 </div>
               </div>
@@ -1451,7 +1453,7 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
                       value={form.booking_url}
                       onChange={handleFieldChange}
                       placeholder="bookings@yourname.com"
-                      className="w-full bg-transparent text-sm text-white outline-none placeholder:text-base-muted/60"
+                      className="w-full bg-transparent text-sm text-fg outline-none placeholder:text-base-muted/60"
                     />
                   </div>
                 </div>
@@ -1467,7 +1469,7 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
                     onChange={handleFieldChange}
                     maxLength={40}
                     placeholder="Business & Bookings"
-                    className="w-full bg-transparent text-sm text-white outline-none placeholder:text-base-muted/60"
+                    className="w-full bg-transparent text-sm text-fg outline-none placeholder:text-base-muted/60"
                   />
                 </div>
               </div>
@@ -1660,7 +1662,7 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
               <button
                 type="submit"
                 disabled={domainSaving}
-                className="w-full sm:w-auto bg-base-card border border-base-border hover:border-brand transition text-white font-semibold rounded-lg px-5 py-2.5 text-sm disabled:opacity-60"
+                className="w-full sm:w-auto bg-base-card border border-base-border hover:border-brand transition text-fg font-semibold rounded-lg px-5 py-2.5 text-sm disabled:opacity-60"
               >
                 {domainSaving ? "Saving…" : "Save Domain"}
               </button>
@@ -1668,15 +1670,15 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
             {domainError && <p className="text-sm text-red-400 mt-2">{domainError}</p>}
             {user?.custom_domain ? (
               <div className="mt-4 pt-4 border-t border-base-border text-xs text-base-muted space-y-1.5">
-                <p className="font-semibold text-white">Two one-time steps to finish setup:</p>
+                <p className="font-semibold text-fg">Two one-time steps to finish setup:</p>
                 <p>
-                  1. At your domain registrar, point <span className="text-white">{user.custom_domain}</span>{" "}
+                  1. At your domain registrar, point <span className="text-fg">{user.custom_domain}</span>{" "}
                   at this app — add a CNAME record with value{" "}
                   <code className="text-brand-light">cname.vercel-dns.com</code> (or, for a root/apex domain,
                   an A record to <code className="text-brand-light">76.76.21.21</code>).
                 </p>
                 <p>
-                  2. Add <span className="text-white">{user.custom_domain}</span> under Settings → Domains in
+                  2. Add <span className="text-fg">{user.custom_domain}</span> under Settings → Domains in
                   the Vercel project this site is deployed on. Vercel will confirm once DNS is detected — that
                   step can&rsquo;t be done from here, since only the site&rsquo;s owner has access to that
                   project.
@@ -1704,7 +1706,7 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
                   type="button"
                   onClick={handleResendVerification}
                   disabled={resendLoading}
-                  className="text-xs font-semibold text-amber-200 hover:text-white border border-amber-900/60 hover:border-amber-200 rounded-lg px-3 py-1.5 transition disabled:opacity-60"
+                  className="text-xs font-semibold text-amber-200 hover:text-fg border border-amber-900/60 hover:border-amber-200 rounded-lg px-3 py-1.5 transition disabled:opacity-60"
                 >
                   {resendLoading ? "Sending…" : "Resend email"}
                 </button>
@@ -1771,7 +1773,7 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
             <button
               type="submit"
               disabled={passwordSaving}
-              className="w-full sm:w-auto bg-base-card border border-base-border hover:border-brand transition text-white font-semibold rounded-lg px-5 py-2.5 text-sm disabled:opacity-60"
+              className="w-full sm:w-auto bg-base-card border border-base-border hover:border-brand transition text-fg font-semibold rounded-lg px-5 py-2.5 text-sm disabled:opacity-60"
             >
               {passwordSaving ? "Saving…" : "Update password"}
             </button>

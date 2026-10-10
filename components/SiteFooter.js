@@ -6,28 +6,28 @@ export default function SiteFooter({ className = "" }) {
     <div
       className={`flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-base-muted ${className}`}
     >
-      <Link href="/about" className="hover:text-white transition">
+      <Link href="/about" className="hover:text-fg transition">
         About
       </Link>
-      <Link href="/faq" className="hover:text-white transition">
+      <Link href="/faq" className="hover:text-fg transition">
         FAQ
       </Link>
-      <Link href="/feedback" className="hover:text-white transition">
+      <Link href="/feedback" className="hover:text-fg transition">
         Customer Feedback
       </Link>
-      <Link href="/privacy" className="hover:text-white transition">
+      <Link href="/privacy" className="hover:text-fg transition">
         Privacy Policy
       </Link>
-      <Link href="/terms" className="hover:text-white transition">
+      <Link href="/terms" className="hover:text-fg transition">
         Terms of Use
       </Link>
-      <Link href="/refund-policy" className="hover:text-white transition">
+      <Link href="/refund-policy" className="hover:text-fg transition">
         Refund Policy
       </Link>
-      <Link href="/permissions" className="hover:text-white transition">
+      <Link href="/permissions" className="hover:text-fg transition">
         Manage Permissions
       </Link>
-      <ReportProblemTrigger className="hover:text-white transition" />
+      <ReportProblemTrigger className="hover:text-fg transition" />
     </div>
   );
 }

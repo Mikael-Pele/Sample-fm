@@ -4,14 +4,48 @@
 
 :root {
   --fan-bg-tint: #0a0a0c;
+
+  /* Dark theme (default). RGB channels so Tailwind opacity modifiers work. */
+  --c-bg: 10 10 12;
+  --c-card: 18 18 20;
+  --c-border: 36 36 39;
+  --c-muted: 113 113 122;
+  --c-fg: 255 255 255;
+  --c-brand: 255 77 0;
+  --c-brand-light: 255 138 91;
+  --glass-bg: rgba(18, 18, 20, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.06);
+  --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
+  --streak-opacity: 1;
+  color-scheme: dark;
+}
+
+/* Light theme: a warm off-white rather than pure white, so it stays easy
+   on the eyes. Brand orange is deepened slightly so orange text keeps
+   enough contrast on a light background. Applied by adding the "light"
+   class to <html> (see components/ThemeToggle.js and pages/_document.js). */
+html.light {
+  --fan-bg-tint: #f6f5f2;
+  --c-bg: 246 245 242;
+  --c-card: 255 255 255;
+  --c-border: 226 223 217;
+  --c-muted: 95 95 104;
+  --c-fg: 23 23 28;
+  --c-brand: 230 69 0;
+  --c-brand-light: 196 57 0;
+  --glass-bg: rgba(255, 255, 255, 0.82);
+  --glass-border: rgba(0, 0, 0, 0.07);
+  --shadow-glass: 0 8px 28px 0 rgba(30, 20, 10, 0.08);
+  --streak-opacity: 0.45;
+  color-scheme: light;
 }
 
 html,
 body {
   padding: 0;
   margin: 0;
-  background-color: #0a0a0c;
-  color: #ffffff;
+  background-color: rgb(var(--c-bg));
+  color: rgb(var(--c-fg));
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
     sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
   overflow-x: hidden;
@@ -33,19 +67,19 @@ img {
 }
 
 ::-webkit-scrollbar-track {
-  background: #0a0a0c;
+  background: rgb(var(--c-bg));
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #242427;
+  background: rgb(var(--c-border));
   border-radius: 8px;
 }
 
 .glass-card {
-  background: rgba(18, 18, 20, 0.85);
+  background: var(--glass-bg);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--glass-border);
 }
 
 .gate-blur {
@@ -57,8 +91,8 @@ img {
 .fan-page-bg {
   background: radial-gradient(
     circle at 50% 0%,
-    color-mix(in srgb, var(--fan-bg-tint) 35%, #0a0a0c) 0%,
-    #0a0a0c 60%
+    color-mix(in srgb, var(--fan-bg-tint) 35%, rgb(var(--c-bg))) 0%,
+    rgb(var(--c-bg)) 60%
   );
   transition: background 0.6s ease;
 }
@@ -111,6 +145,7 @@ img {
   overflow: hidden;
   pointer-events: none;
   z-index: 0;
+  opacity: var(--streak-opacity);
 }
 
 .light-streaks::before,
@@ -188,3 +223,26 @@ img {
   text-wrap: balance;
   word-break: break-word;
 }
+
+/* Status colors (errors, success, warnings) are written for the dark UI as
+   pale text on very dark tinted panels. In the light theme those would be
+   washed out text on muddy panels, so swap them for their light-UI
+   equivalents here rather than threading a variant through every usage. */
+html.light .text-red-400 { color: #dc2626; }
+html.light .text-red-300 { color: #b91c1c; }
+html.light .text-emerald-400 { color: #047857; }
+html.light .text-amber-400 { color: #b45309; }
+html.light .text-amber-200,
+html.light .text-amber-200\/80 { color: #92400e; }
+html.light .hover\:border-amber-200:hover { border-color: #b45309; }
+html.light .bg-red-950\/40,
+html.light .bg-red-950\/80 { background-color: #fee2e2; }
+html.light .bg-emerald-950,
+html.light .bg-emerald-950\/40 { background-color: #d1fae5; }
+html.light .bg-amber-950,
+html.light .bg-amber-950\/40,
+html.light .bg-amber-950\/30 { background-color: #fef3c7; }
+html.light .border-red-900 { border-color: #fecaca; }
+html.light .border-emerald-900 { border-color: #a7f3d0; }
+html.light .border-amber-900,
+html.light .border-amber-900\/60 { border-color: #fde68a; }
