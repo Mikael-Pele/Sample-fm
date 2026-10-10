@@ -13,6 +13,8 @@ import {
   PandoraIcon,
   IHeartRadioIcon,
   WhatsAppIcon,
+  TikTokIcon,
+  BookingIcon,
   CommunityIcon,
   UploadIcon,
   LockIcon,
@@ -59,8 +61,11 @@ const EMPTY_FORM = {
   url_pandora: "",
   url_iheartradio: "",
   url_whatsapp: "",
+  url_tiktok: "",
   community_url: "",
   community_label: "",
+  booking_url: "",
+  booking_label: "",
   pixel_fb: "",
   pixel_tiktok: "",
 };
@@ -77,6 +82,7 @@ const PLATFORM_FIELDS = [
   { key: "url_pandora", label: "Pandora", Icon: PandoraIcon, ring: "focus-within:ring-pandora" },
   { key: "url_iheartradio", label: "iHeartRadio", Icon: IHeartRadioIcon, ring: "focus-within:ring-iheartradio" },
   { key: "url_whatsapp", label: "WhatsApp Channel", Icon: WhatsAppIcon, ring: "focus-within:ring-whatsapp" },
+  { key: "url_tiktok", label: "TikTok", Icon: TikTokIcon, ring: "focus-within:ring-white" },
 ];
 
 // Display metadata for the per-platform click breakdown (Premium). Keyed
@@ -93,6 +99,8 @@ const PLATFORM_META = {
   pandora: { label: "Pandora", Icon: PandoraIcon, barClass: "bg-pandora" },
   iheartradio: { label: "iHeartRadio", Icon: IHeartRadioIcon, barClass: "bg-iheartradio" },
   whatsapp: { label: "WhatsApp Channel", Icon: WhatsAppIcon, barClass: "bg-whatsapp" },
+  tiktok: { label: "TikTok", Icon: TikTokIcon, barClass: "bg-white" },
+  booking: { label: "Business & Bookings", Icon: BookingIcon, barClass: "bg-base-muted" },
   community_cta: { label: "Fan Community CTA", Icon: CommunityIcon, barClass: "bg-brand" },
   presave: { label: "Pre-Save Modal", Icon: UploadIcon, barClass: "bg-brand" },
   footer_cta: { label: "\"Powered by\" Footer", Icon: UploadIcon, barClass: "bg-base-muted" },
@@ -453,8 +461,12 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
       url_pandora: link.url_pandora || "",
       url_iheartradio: link.url_iheartradio || "",
       url_whatsapp: link.url_whatsapp || "",
+      url_tiktok: link.url_tiktok || "",
       community_url: link.community_url || "",
       community_label: link.community_label || "",
+      // Stored as mailto: for emails; show the bare address when editing.
+      booking_url: (link.booking_url || "").replace(/^mailto:/i, ""),
+      booking_label: link.booking_label || "",
       pixel_fb: link.pixel_fb || "",
       pixel_tiktok: link.pixel_tiktok || "",
     });
@@ -1408,6 +1420,53 @@ export default function Dashboard({ initialUser, pricingRegion: detectedRegion }
                     onChange={handleFieldChange}
                     maxLength={40}
                     placeholder="Join the Nation"
+                    className="w-full bg-transparent text-sm text-white outline-none placeholder:text-base-muted/60"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* ---------------- Business & Bookings ---------------- */}
+            <div>
+              <h3 className="text-sm font-bold mb-1 text-base-muted uppercase tracking-wide">
+                Business &amp; Bookings (optional)
+              </h3>
+              <p className="text-xs text-base-muted mb-3">
+                A button for promoters, brands and press to reach you — your bookings email or a
+                booking form link.
+              </p>
+              <div className="grid sm:grid-cols-2 gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-14 h-14 rounded-xl bg-base-bg border border-base-border flex items-center justify-center shrink-0">
+                    <BookingIcon size={22} className="text-base-muted" />
+                  </div>
+                  <div className="min-w-0 flex-1 bg-base-bg border border-base-border rounded-lg px-3.5 py-2.5 transition focus-within:border-brand focus-within:ring-1 focus-within:ring-brand">
+                    <label htmlFor="booking_url" className="block text-[11px] font-semibold text-base-muted mb-0.5">
+                      Bookings Email or Link
+                    </label>
+                    <input
+                      id="booking_url"
+                      type="text"
+                      name="booking_url"
+                      value={form.booking_url}
+                      onChange={handleFieldChange}
+                      placeholder="bookings@yourname.com"
+                      className="w-full bg-transparent text-sm text-white outline-none placeholder:text-base-muted/60"
+                    />
+                  </div>
+                </div>
+                <div className="min-w-0 bg-base-bg border border-base-border rounded-lg px-3.5 py-2.5 transition focus-within:border-brand focus-within:ring-1 focus-within:ring-brand">
+                  <label htmlFor="booking_label" className="block text-[11px] font-semibold text-base-muted mb-0.5">
+                    Button Text (optional)
+                  </label>
+                  <input
+                    id="booking_label"
+                    type="text"
+                    name="booking_label"
+                    value={form.booking_label}
+                    onChange={handleFieldChange}
+                    maxLength={40}
+                    placeholder="Business & Bookings"
                     className="w-full bg-transparent text-sm text-white outline-none placeholder:text-base-muted/60"
                   />
                 </div>

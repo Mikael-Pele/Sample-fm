@@ -12,6 +12,8 @@ import {
   PandoraIcon,
   IHeartRadioIcon,
   WhatsAppIcon,
+  TikTokIcon,
+  BookingIcon,
   CommunityIcon,
   ChevronIcon,
   DroppaFmMark,
@@ -133,6 +135,7 @@ export default function SmartLinkPage({ smartlink, isAfricanFan, fanCountry, own
       { key: "pandora", label: "Pandora", url: smartlink.url_pandora, Icon: PandoraIcon },
       { key: "iheartradio", label: "iHeartRadio", url: smartlink.url_iheartradio, Icon: IHeartRadioIcon },
       { key: "whatsapp", label: "WhatsApp Channel", url: smartlink.url_whatsapp, Icon: WhatsAppIcon },
+      { key: "tiktok", label: "TikTok", url: smartlink.url_tiktok, Icon: TikTokIcon },
     ].filter((p) => Boolean(p.url));
 
     if (!isAfricanFan) return all;
@@ -392,6 +395,19 @@ export default function SmartLinkPage({ smartlink, isAfricanFan, fanCountry, own
           >
             <CommunityIcon size={17} />
             {smartlink.community_label || `Join ${smartlink.artist_name}'s community`}
+          </a>
+        )}
+
+        {smartlink.booking_url && (
+          <a
+            href={smartlink.booking_url}
+            target={smartlink.booking_url.startsWith("mailto:") ? undefined : "_blank"}
+            rel="noopener noreferrer"
+            onClick={() => trackClick("booking")}
+            className="mt-3 w-full flex items-center justify-center gap-2 border border-base-border hover:border-brand text-white font-semibold text-sm rounded-xl px-4 py-3 transition-colors"
+          >
+            <BookingIcon size={17} />
+            {smartlink.booking_label || "Business & Bookings"}
           </a>
         )}
 

@@ -13,6 +13,8 @@ const VALID_PLATFORMS = new Set([
   "pandora",
   "iheartradio",
   "whatsapp",
+  "tiktok",
+  "booking",
   "community_cta",
   "presave",
   "footer_cta",

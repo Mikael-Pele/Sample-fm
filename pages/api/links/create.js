@@ -60,6 +60,8 @@ export default async function handler(req, res) {
       platformUrls,
       community_url,
       community_label,
+      booking_url,
+      booking_label,
       is_presave,
     } = core;
 
@@ -129,6 +131,8 @@ export default async function handler(req, res) {
         ...platformUrls,
         community_url,
         community_label,
+        booking_url,
+        booking_label,
         pixel_fb,
         pixel_tiktok,
         preview_url,
