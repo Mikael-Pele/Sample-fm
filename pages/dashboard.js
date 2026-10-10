@@ -3,19 +3,20 @@ import prisma from "../lib/prisma";
 import { getSessionFromRequest } from "../lib/auth";
 import { ensurePlanCurrent, getAccessStatus, trialEndsAt } from "../lib/plans";
 import Dashboard from "../components/Dashboard";
+import { getLocalPrice, pricingCountryFromRequest } from "../lib/localPrice";
 
-export default function DashboardPage({ user }) {
+export default function DashboardPage({ user, price }) {
   return (
     <>
       <Head>
         <title>Creator Dashboard — Droppa.fm</title>
       </Head>
-      <Dashboard initialUser={user} />
+      <Dashboard initialUser={user} price={price} />
     </>
   );
 }
 
-export async function getServerSideProps({ req }) {
+export async function getServerSideProps({ req, query }) {
   const session = getSessionFromRequest(req);
 
   if (!session || !session.userId) {
@@ -55,6 +56,7 @@ export async function getServerSideProps({ req }) {
         access_status: getAccessStatus(dbUser),
         trial_ends_at: trialEndsAt(dbUser).toISOString(),
       },
+      price: getLocalPrice(pricingCountryFromRequest(req, query)),
     },
   };
 }

@@ -12,7 +12,7 @@ const FAQS = [
   },
   {
     q: "How much does Droppa.fm Artist cost?",
-    a: "$49 a year, the same price for everyone wherever you are. It's charged in Ghana cedis (GH₵550) through Paystack, and your bank converts it if your card is in another currency. This is a founding-artist price: if you join now, you keep it for as long as you stay subscribed.",
+    a: "$49 a year, the same price for everyone wherever you are. We show it in your own currency (for example about ₦75,000 in Nigeria, KSh 6,300 in Kenya or CFA 28,000 in Côte d'Ivoire), but it's charged in Ghana cedis (GH₵550) through Paystack, so your bank converts it if your card is in another currency and the exact amount can differ slightly. This is a founding-artist price: if you join now, you keep it for as long as you stay subscribed.",
   },
   {
     q: "How do I pay, and is it secure?",

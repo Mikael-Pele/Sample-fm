@@ -35,7 +35,8 @@ import BusinessUpgradeModal from "./BusinessUpgradeModal";
 import RangePicker, { rangeDescription } from "./RangePicker";
 import { ReportProblemTrigger } from "./ReportProblemModal";
 import { SUPPORT_PHONE_DISPLAY, SUPPORT_PHONE_E164, SUPPORT_WHATSAPP_URL } from "../lib/support";
-import { COMING_SOON_FEATURES, PLAN, PLAN_PRICE_GHS, TRIAL_LINK_LIMIT } from "../lib/plans";
+import { COMING_SOON_FEATURES, PLAN, TRIAL_LINK_LIMIT } from "../lib/plans";
+import { getLocalPrice } from "../lib/localPrice";
 
 // Shown only to paying subscribers as a direct line for support — a perk
 // of paying, not something free-tier users see.
@@ -194,7 +195,7 @@ function nextArtworkItemId() {
   return `art-${Date.now()}-${artworkItemSeq}`;
 }
 
-export default function Dashboard({ initialUser }) {
+export default function Dashboard({ initialUser, price = getLocalPrice(null) }) {
   const router = useRouter();
   const [user, setUser] = useState(initialUser);
   const [form, setForm] = useState(EMPTY_FORM);
@@ -858,11 +859,15 @@ export default function Dashboard({ initialUser }) {
                 <span className="text-[10px] font-bold uppercase tracking-wide text-brand">Founding artist price</span>
               </div>
               <div className="text-2xl font-extrabold mb-0.5">
-                ${PLAN.priceUsd}
+                {price.approximate ? "~" : ""}
+                {price.label}
                 <span className="text-sm font-medium text-base-muted">/year</span>
               </div>
               <div className="text-xs text-base-muted mb-3">
-                Charged as GH&#8373;{PLAN_PRICE_GHS} a year. Locked in for as long as you stay subscribed.
+                {price.currency === "GHS"
+                  ? "Charged in cedis through Paystack."
+                  : `Charged as ${price.chargedLabel} (${price.usdLabel}) a year; your bank converts it.`}{" "}
+                Locked in for as long as you stay subscribed.
               </div>
               <p className="text-xs text-base-muted mb-4 flex-1">
                 Unlimited SmartLinks, full analytics, fan email exports, no Droppa.fm badge.
@@ -879,7 +884,7 @@ export default function Dashboard({ initialUser }) {
                 style={{ "--glow-color": "rgba(255, 77, 0, 0.5)" }}
                 className="w-full shimmer-gold glow-on-hover text-center text-base-bg font-bold rounded-lg py-2.5 text-sm disabled:opacity-60"
               >
-                {upgradeLoading ? "Redirecting to checkout…" : "Subscribe for $" + PLAN.priceUsd + "/year"}
+                {upgradeLoading ? "Redirecting to checkout…" : "Subscribe for " + price.label + "/year"}
               </button>
             </div>
           )}
