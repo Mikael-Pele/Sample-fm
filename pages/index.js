@@ -7,7 +7,8 @@ import ThemeToggle from "../components/ThemeToggle";
 import { DroppaFmMark } from "../components/PlatformIcons";
 import InstallAppPrompt from "../components/InstallAppPrompt";
 import prisma from "../lib/prisma";
-import { PLAN, TRIAL_DAYS } from "../lib/plans";
+import { TRIAL_DAYS } from "../lib/plans";
+import { getLocalPrice, pricingCountryFromRequest } from "../lib/localPrice";
 
 function getAppHost() {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL;
@@ -19,7 +20,7 @@ function getAppHost() {
   }
 }
 
-export async function getServerSideProps({ req }) {
+export async function getServerSideProps({ req, query }) {
   const requestHost = (req.headers.host || "").toLowerCase().split(":")[0];
   const appHost = getAppHost();
   const isKnownAppHost =
@@ -40,10 +41,10 @@ export async function getServerSideProps({ req }) {
     }
   }
 
-  return { props: {} };
+  return { props: { price: getLocalPrice(pricingCountryFromRequest(req, query)) } };
 }
 
-export default function HomePage() {
+export default function HomePage({ price }) {
   const router = useRouter();
   const [mode, setMode] = useState("register");
   const [email, setEmail] = useState("");
@@ -122,14 +123,18 @@ export default function HomePage() {
               <div className="text-base-muted">One SmartLink with everything unlocked, no card needed</div>
             </div>
             <div className="glass-card rounded-xl p-4 border-brand/40">
-              <div className="text-brand-light font-bold text-2xl mb-1">${PLAN.priceUsd}/yr</div>
+              <div className="text-brand-light font-bold text-2xl mb-1">
+                {price.approximate ? "~" : ""}
+                {price.label}/yr
+              </div>
               <div className="text-base-muted">
                 Unlimited links, full analytics, fan emails, no branding
               </div>
             </div>
           </div>
           <p className="text-xs text-base-muted mt-3 max-w-md">
-            Founding-artist price, locked in while you stay subscribed. Custom domains, ad pixels
+            Founding-artist price, locked in while you stay subscribed.
+            {price.currency !== "GHS" ? ` Charged as ${price.chargedLabel} through Paystack; your bank converts it.` : ""} Custom domains, ad pixels
             and team logins are coming soon.
           </p>
         </div>
@@ -161,7 +166,7 @@ export default function HomePage() {
           </h2>
           <p className="text-base-muted text-sm mb-6">
             {mode === "register"
-              ? `Start with a ${TRIAL_DAYS}-day free trial. Then $${PLAN.priceUsd} a year.`
+              ? `Start with a ${TRIAL_DAYS}-day free trial. Then ${price.approximate ? "about " : ""}${price.label} a year.`
               : "Sign in to manage your SmartLinks."}
           </p>
 
