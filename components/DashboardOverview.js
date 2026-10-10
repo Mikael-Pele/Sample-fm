@@ -1,6 +1,6 @@
 import ClicksChart from "./ClicksChart";
 import { initialsFor } from "./DashboardLayout";
-import { StatusPill, formatReleaseDate } from "./ReleasesPage";
+import { StatusPill, formatReleaseDate, ReleaseCover } from "./ReleasesPage";
 import { rangeDescription } from "./RangePicker";
 
 export function StatTile({ label, value, hint, hintClass = "text-base-muted" }) {
@@ -245,6 +245,7 @@ export default function DashboardOverview({
                     onClick={() => onNavigate("releases")}
                     className="w-full flex items-center gap-3 py-2.5 border-b border-base-border/60 last:border-b-0 text-left group"
                   >
+                    <ReleaseCover release={r} />
                     <span className="min-w-0 flex-1">
                       <span className="block text-sm font-semibold truncate group-hover:text-brand-light transition">
                         {r.title}

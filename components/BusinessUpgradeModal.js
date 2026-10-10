@@ -1,7 +1,8 @@
 import { useEffect } from "react";
 import { BUSINESS_FEATURES } from "./DashboardLayout";
+import { SUPPORT_WHATSAPP_URL } from "../lib/support";
 
-const BUSINESS_CONTACT_URL = "https://wa.me/64635253254?text=" + encodeURIComponent("Hi Droppa.fm, I'm interested in the Business plan.");
+const BUSINESS_CONTACT_URL = `${SUPPORT_WHATSAPP_URL}?text=` + encodeURIComponent("Hi Droppa.fm, I'm interested in the Business plan.");
 
 // Shown when an artist clicks a "For Business" item in the sidebar. Those
 // pages are part of the Business tier, which isn't on sale yet.

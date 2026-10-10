@@ -34,12 +34,13 @@ import EpkEditor from "./EpkEditor";
 import BusinessUpgradeModal from "./BusinessUpgradeModal";
 import RangePicker, { rangeDescription } from "./RangePicker";
 import { ReportProblemTrigger } from "./ReportProblemModal";
+import { SUPPORT_PHONE_DISPLAY, SUPPORT_PHONE_E164, SUPPORT_WHATSAPP_URL } from "../lib/support";
 import { COMING_SOON_FEATURES, PLAN, PLAN_PRICE_GHS, TRIAL_LINK_LIMIT } from "../lib/plans";
 
 // Shown only to paying subscribers as a direct line for support — a perk
 // of paying, not something free-tier users see.
-const PREMIUM_SUPPORT_PHONE_DISPLAY = "+64 635253254";
-const PREMIUM_SUPPORT_WHATSAPP_URL = "https://wa.me/64635253254";
+const PREMIUM_SUPPORT_PHONE_DISPLAY = SUPPORT_PHONE_DISPLAY;
+const PREMIUM_SUPPORT_WHATSAPP_URL = SUPPORT_WHATSAPP_URL;
 
 const IS_PRODUCTION = process.env.NODE_ENV === "production";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "";
@@ -802,7 +803,7 @@ export default function Dashboard({ initialUser }) {
         )}
 
         {page === "releases" && (
-          <ReleasesPage releases={releases} onChange={setReleases} canEdit={hasAccess} onUpgrade={goToBilling} />
+          <ReleasesPage releases={releases} onChange={setReleases} canEdit={hasAccess} onUpgrade={goToBilling} links={links} />
         )}
         {page === "epk" && (
           <EpkEditor
@@ -892,7 +893,7 @@ export default function Dashboard({ initialUser }) {
             <div className="mt-6 pt-6 border-t border-base-border flex flex-wrap items-center gap-x-5 gap-y-2 text-xs">
               <span className="font-semibold text-fg">Priority support</span>
               <a
-                href={`tel:${PREMIUM_SUPPORT_PHONE_DISPLAY.replace(/\s+/g, "")}`}
+                href={`tel:${SUPPORT_PHONE_E164}`}
                 className="text-base-muted hover:text-fg transition"
               >
                 Call {PREMIUM_SUPPORT_PHONE_DISPLAY}
