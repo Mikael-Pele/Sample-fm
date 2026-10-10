@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Field, ErrorNote, INPUT_CLASS, PrimaryButton, SecondaryButton, ReadOnlyNotice, requestJson } from "./DashboardForms";
 
 export const RELEASE_STATUS_META = {
@@ -39,7 +39,28 @@ const DISTRIBUTOR_SUGGESTIONS = [
   "Self-released",
 ];
 
-const EMPTY = { title: "", status: "soon", distributor: "", release_date: "" };
+const EMPTY = { title: "", status: "soon", distributor: "", release_date: "", artwork_url: "", link_url: "" };
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "";
+
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error("Could not read that file."));
+    reader.readAsDataURL(file);
+  });
+}
+
+export function ReleaseCover({ release, size = "w-10 h-10" }) {
+  return (
+    <span className={`${size} rounded-md bg-base-bg border border-base-border overflow-hidden shrink-0 block`}>
+      {release.artwork_url ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={release.artwork_url} alt="" className="w-full h-full object-cover" />
+      ) : null}
+    </span>
+  );
+}
 const FILTERS = [
   { key: "all", label: "All" },
   { key: "live", label: "Live" },
@@ -48,12 +69,45 @@ const FILTERS = [
 ];
 
 // Release tracker: what's out, what's coming and through which distributor.
-export default function ReleasesPage({ releases, onChange, canEdit, onUpgrade }) {
+export default function ReleasesPage({ releases, onChange, canEdit, onUpgrade, links = [] }) {
   const [form, setForm] = useState(EMPTY);
   const [editingId, setEditingId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [filter, setFilter] = useState("all");
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef(null);
+  const origin = APP_URL || (typeof window !== "undefined" ? window.location.origin : "");
+
+  // Picking one of the artist's SmartLinks fills the link and, if empty,
+  // the title and cover art from it.
+  function pickSmartLink(slug) {
+    const link = links.find((l) => l.slug === slug);
+    if (!link) return;
+    setForm((prev) => ({
+      ...prev,
+      link_url: `${origin}/${link.slug}`,
+      title: prev.title || link.track_title,
+      artwork_url: prev.artwork_url || link.artwork_url || "",
+    }));
+  }
+
+  async function handleCover(e) {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = "";
+    if (!file) return;
+    setUploading(true);
+    setError("");
+    try {
+      const data_url = await readFileAsDataUrl(file);
+      const data = await requestJson("/api/upload/artwork", { method: "POST", body: JSON.stringify({ data_url }) });
+      setForm((prev) => ({ ...prev, artwork_url: data.url }));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setUploading(false);
+    }
+  }
 
   const counts = Object.fromEntries(FILTERS.map((f) => [f.key, f.key === "all" ? releases.length : releases.filter((r) => r.status === f.key).length]));
   const shown = filter === "all" ? releases : releases.filter((r) => r.status === filter);
@@ -69,6 +123,8 @@ export default function ReleasesPage({ releases, onChange, canEdit, onUpgrade })
       status: release.status,
       distributor: release.distributor || "",
       release_date: release.release_date || "",
+      artwork_url: release.artwork_url || "",
+      link_url: release.link_url || "",
     });
     setError("");
   }
@@ -166,10 +222,56 @@ export default function ReleasesPage({ releases, onChange, canEdit, onUpgrade })
               ))}
             </datalist>
           </Field>
+          <Field
+            label="Link"
+            htmlFor="release-link"
+            className="sm:col-span-2"
+            hint={links.length > 0 ? "Paste any link, or pick one of your SmartLinks." : "Where fans can listen or pre-save."}
+          >
+            <input
+              id="release-link"
+              name="link_url"
+              value={form.link_url}
+              onChange={update}
+              maxLength={600}
+              placeholder="droppa.fm/your-song"
+              disabled={!canEdit}
+              className={INPUT_CLASS}
+            />
+            {links.length > 0 && canEdit && (
+              <select
+                aria-label="Use one of your SmartLinks"
+                value=""
+                onChange={(e) => pickSmartLink(e.target.value)}
+                className={`${INPUT_CLASS} mt-2`}
+              >
+                <option value="">Use one of your SmartLinks…</option>
+                {links.map((l) => (
+                  <option key={l.id} value={l.slug}>
+                    {l.track_title} (droppa.fm/{l.slug})
+                  </option>
+                ))}
+              </select>
+            )}
+          </Field>
+          <Field label="Cover art" htmlFor="release-cover" className="sm:col-span-2">
+            <div className="flex items-center gap-3">
+              <ReleaseCover release={form} size="w-14 h-14" />
+              <input ref={fileRef} id="release-cover" type="file" accept="image/jpeg,image/png,image/webp" onChange={handleCover} className="hidden" />
+              <SecondaryButton type="button" disabled={!canEdit || uploading} onClick={() => fileRef.current && fileRef.current.click()}>
+                {uploading ? "Uploading…" : form.artwork_url ? "Change cover" : "Upload cover"}
+              </SecondaryButton>
+              {form.artwork_url && canEdit && (
+                <button type="button" onClick={() => setForm((prev) => ({ ...prev, artwork_url: "" }))} className="text-xs text-base-muted hover:text-fg">
+                  Remove
+                </button>
+              )}
+            </div>
+          </Field>
         </div>
         <ErrorNote>{error}</ErrorNote>
         <div className="flex gap-3">
-          <PrimaryButton type="submit" disabled={saving || !canEdit}>
+          <PrimaryButton type="submit" disabled={saving || uploading || !canEdit}>
             {saving ? "Saving…" : editingId ? "Save changes" : "Add release"}
           </PrimaryButton>
           {editingId && (
@@ -218,7 +320,19 @@ export default function ReleasesPage({ releases, onChange, canEdit, onUpgrade })
               <tbody>
                 {shown.map((r) => (
                   <tr key={r.id} className="border-t border-base-border/60">
-                    <td className="px-4 sm:px-5 py-3 font-semibold max-w-[220px] truncate">{r.title}</td>
+                    <td className="px-4 sm:px-5 py-3">
+                      <div className="flex items-center gap-3 min-w-0 max-w-[260px]">
+                        <ReleaseCover release={r} />
+                        <div className="min-w-0">
+                          <div className="font-semibold truncate">{r.title}</div>
+                          {r.link_url && (
+                            <a href={r.link_url} target="_blank" rel="noopener noreferrer" className="block text-xs text-brand-light hover:text-brand truncate">
+                              {r.link_url.replace(/^https?:\/\//, "")}
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    </td>
                     <td className="px-3 py-3">
                       <StatusPill status={r.status} />
                     </td>

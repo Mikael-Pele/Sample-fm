@@ -136,6 +136,8 @@ model Release {
   status       String    @default("draft") // "live" | "soon" | "draft"
   distributor  String?
   release_date DateTime? @db.Date
+  artwork_url  String? // cover art (Supabase Storage URL)
+  link_url     String? // where fans listen: a Droppa SmartLink or any http(s) link
   created_at   DateTime  @default(now())
 
   @@map("releases")
