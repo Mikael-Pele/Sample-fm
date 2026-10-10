@@ -26,6 +26,7 @@ import {
   DashboardSidebar,
   MenuIcon,
   PAGE_TITLES,
+  initialsFor,
 } from "./DashboardLayout";
 import InstallAppPrompt from "./InstallAppPrompt";
 import ReleasesPage from "./ReleasesPage";
@@ -767,6 +768,28 @@ export default function Dashboard({ initialUser, price = getLocalPrice(null) }) 
           </div>
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <ThemeToggle />
+            {/* The sidebar (and its artist pill) is hidden on phones, so the
+                profile icon and its setup badge also sit in the top bar there. */}
+            <button
+              type="button"
+              onClick={() => goToPage("settings")}
+              aria-label={
+                accountTasks.length > 0
+                  ? `Account & billing, ${accountTasks.length} ${accountTasks.length === 1 ? "thing" : "things"} to finish`
+                  : "Account & billing"
+              }
+              className="md:hidden relative w-9 h-9 rounded-full bg-gradient-to-br from-brand to-[#ff8c00] flex items-center justify-center text-white text-xs font-extrabold shrink-0"
+            >
+              {initialsFor(artistName)}
+              {accountTasks.length > 0 && (
+                <span
+                  className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 border-2 border-base-bg text-white text-[10px] font-extrabold leading-[14px] text-center"
+                  aria-hidden="true"
+                >
+                  {accountTasks.length}
+                </span>
+              )}
+            </button>
             {hasAccess && analytics && analytics.presaves.length > 0 && (page === "overview" || page === "analytics") && (
               <button
                 type="button"
