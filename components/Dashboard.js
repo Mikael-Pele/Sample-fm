@@ -34,7 +34,7 @@ import EpkEditor from "./EpkEditor";
 import BusinessUpgradeModal from "./BusinessUpgradeModal";
 import RangePicker, { rangeDescription } from "./RangePicker";
 import { ReportProblemTrigger } from "./ReportProblemModal";
-import { COMING_SOON_FEATURES, PLAN, PLAN_PRICE_GHS } from "../lib/plans";
+import { COMING_SOON_FEATURES, PLAN, PLAN_PRICE_GHS, TRIAL_LINK_LIMIT } from "../lib/plans";
 
 // Shown only to paying subscribers as a direct line for support — a perk
 // of paying, not something free-tier users see.
@@ -783,7 +783,7 @@ export default function Dashboard({ initialUser }) {
               analytics={analytics}
               links={links}
               linksHint={
-                isPro ? "Unlimited on your plan" : hasAccess ? `Unlimited during trial` : "Subscribe to add more"
+                isPro ? "Unlimited on your plan" : hasAccess ? `${links.length}/${TRIAL_LINK_LIMIT} during trial` : "Subscribe to add more"
               }
               ranges={ANALYTICS_RANGES}
               range={analyticsRange}
@@ -835,7 +835,7 @@ export default function Dashboard({ initialUser }) {
                   : hasAccess
                   ? `${trialDaysLeft} day${trialDaysLeft === 1 ? "" : "s"} left of your free trial (ends ${formatLongDate(
                       user.trial_ends_at
-                    )}). Everything is unlocked until then. Subscribe any time to keep it that way.`
+                    )}). You can create ${TRIAL_LINK_LIMIT} SmartLink and use every other feature until then. Subscribe for unlimited SmartLinks.`
                   : "Your free trial has ended. Your SmartLinks stay live, but you need a subscription to create or edit links and to see your full analytics and fan emails."}
               </p>
             </div>
@@ -1629,6 +1629,15 @@ export default function Dashboard({ initialUser }) {
                   className="text-xs font-semibold text-brand-light hover:text-brand shrink-0"
                 >
                   Subscribe to add or edit links
+                </a>
+              )}
+              {accessStatus === "trial" && (
+                <a
+                  href={UPGRADE_HREF}
+                  onClick={goToBilling}
+                  className="text-xs text-base-muted hover:text-fg shrink-0"
+                >
+                  {links.length}/{TRIAL_LINK_LIMIT} on trial · Subscribe for unlimited
                 </a>
               )}
             </div>

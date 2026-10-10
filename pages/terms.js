@@ -30,7 +30,7 @@ export default function TermsPage() {
             <p>
               Droppa.fm lets creators build a single SmartLink page linking out to their music and creativity
               across streaming platforms, collect fan pre-saves, and view click analytics. New
-              accounts start with a 14-day free trial, after which a paid yearly plan
+              accounts start with a 7-day free trial (with one SmartLink), after which a paid yearly plan
               (Droppa.fm Artist) is required to create or edit SmartLinks.
             </p>
           </section>

@@ -1,7 +1,7 @@
 import prisma from "../../../lib/prisma";
 import { getSessionFromRequest } from "../../../lib/auth";
 import { generateSlug } from "../../../lib/slug";
-import { ensurePlanCurrent, hasFullAccess, PIXELS_ENABLED } from "../../../lib/plans";
+import { ensurePlanCurrent, getAccessStatus, hasFullAccess, PIXELS_ENABLED, TRIAL_LINK_LIMIT } from "../../../lib/plans";
 import { findPreviewUrl } from "../../../lib/previewLookup";
 import {
   validateCoreFields,
@@ -40,6 +40,17 @@ export default async function handler(req, res) {
         error: "Your free trial has ended. Subscribe to Droppa.fm Artist to create new SmartLinks.",
         code: "subscription_required",
       });
+    }
+
+    // The trial is for trying one release; more links need a subscription.
+    if (getAccessStatus(user) === "trial") {
+      const existingCount = await prisma.smartLink.count({ where: { user_id: user.id } });
+      if (existingCount >= TRIAL_LINK_LIMIT) {
+        return res.status(403).json({
+          error: `The free trial includes ${TRIAL_LINK_LIMIT} SmartLink. Subscribe to Droppa.fm Artist to create more.`,
+          code: "trial_link_limit",
+        });
+      }
     }
 
     const payload = req.body || {};

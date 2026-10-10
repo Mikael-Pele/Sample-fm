@@ -119,7 +119,7 @@ export default function HomePage() {
           <div className="grid grid-cols-2 gap-4 max-w-md text-sm">
             <div className="glass-card rounded-xl p-4">
               <div className="text-brand font-bold text-2xl mb-1">{TRIAL_DAYS} days free</div>
-              <div className="text-base-muted">Everything unlocked, no card needed to start</div>
+              <div className="text-base-muted">One SmartLink with everything unlocked, no card needed</div>
             </div>
             <div className="glass-card rounded-xl p-4 border-brand/40">
               <div className="text-brand-light font-bold text-2xl mb-1">${PLAN.priceUsd}/yr</div>

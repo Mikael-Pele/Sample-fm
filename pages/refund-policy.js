@@ -29,7 +29,7 @@ export default function RefundPolicyPage() {
           <section>
             <h2 className="text-fg font-bold text-lg mb-2">2. Billing cycle</h2>
             <p>
-              Every new account starts with a 14-day free trial, with no payment needed. After
+              Every new account starts with a 7-day free trial with one SmartLink, and no payment is needed. After
               that, Droppa.fm Artist costs $49 a year, charged as GH&#8373;550 through Paystack. Each
               payment covers one year from the day you pay. It does not renew automatically: you
               choose whether to pay again when the year is up.

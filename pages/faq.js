@@ -8,7 +8,7 @@ const FAQS = [
   },
   {
     q: "Is there a free plan?",
-    a: "Every new account gets a 14-day free trial with everything unlocked, and no card is needed to start. After that, Droppa.fm Artist is one yearly plan. If you don't subscribe, your existing SmartLinks stay live, but you'll need a subscription to create or edit links and to see your full analytics and fan emails.",
+    a: "Every new account gets a 7-day free trial with one SmartLink and every other feature unlocked, and no card is needed to start. After that, Droppa.fm Artist is one yearly plan. If you don't subscribe, your existing SmartLinks stay live, but you'll need a subscription to create or edit links and to see your full analytics and fan emails.",
   },
   {
     q: "How much does Droppa.fm Artist cost?",

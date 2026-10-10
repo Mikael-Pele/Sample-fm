@@ -35,7 +35,7 @@ export default function AboutPage() {
             <p>
               We built Droppa.fm specifically with independent African creators in mind, where
               existing SmartLink tools are often priced in a way that&apos;s out of reach.
-              Droppa.fm starts with a 14-day free trial, then one simple yearly plan at the same
+              Droppa.fm starts with a 7-day free trial, then one simple yearly plan at the same
               price for everyone.
             </p>
           </section>
